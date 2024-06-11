@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\MaterialCategory;
 use App\Models\MaterialInventory;
 use App\Models\MaterialIncoming;
 use App\Models\MaterialTransactionLogs;
@@ -33,6 +34,18 @@ class TransactionController extends Controller
         return view('transaction.outgoing');
     }
 
+    public function transactionLogsIndex()
+    {
+        $materials = MaterialInventory::select('material_code', 'material_description', DB::raw('SUM(quantity) as quantity'), DB::raw('MAX(price) as price'))
+            ->orderBy('material_description', 'asc')
+            ->groupBy('material_code', 'material_description')
+            ->get();
+
+        return view('transaction.logs',[
+            'materials' => $materials
+        ]);
+    }
+
     public function fetchIncomingData()
     {
         try {
@@ -42,12 +55,14 @@ class TransactionController extends Controller
                 ->groupBy('material_code', 'material_description')
                 ->get();
 
+            $materialCategories = MaterialCategory::orderBy('material_category', 'asc')->get();
+
             $response = [
                 'status' => 200,
                 'message' => 'Data fetched successfully',
                 'inventories' => $materialInventories,
-                'vendor' => $vendor
-
+                'vendor' => $vendor,
+                'categories' => $materialCategories
             ];
             return response()->json($response, 200);
 
@@ -105,9 +120,11 @@ class TransactionController extends Controller
     {        
         DB::beginTransaction();
         try {
+            $incoming_vendor = $request->get('vendor');
+            $incoming_date = $request->get('date');
             $cart = $request->get('cart');
                         
-            $cart = json_decode($cart, true);            
+            $cart = json_decode($cart, true);
 
             // slip_code
             $slip_code = CodeGenerator::where('remark', 'invoice')->first();                
@@ -115,10 +132,13 @@ class TransactionController extends Controller
 
             foreach ($cart as $key => $value) {
                 $material_description = $value['product'];
+                $material_category = $value['product_category'];
+                $uom = $value['uom'];
                 $quantity = $value['qty'];
                 $price = $value['price'];
                 $payment = $value['payment'];
-                $vendor = $value['vendor'];
+                $vendor = $incoming_vendor;
+                $date_in = strtotime($incoming_date);
 
                 // material_incomings
                 $materialIncoming = new MaterialIncoming();                
@@ -129,8 +149,8 @@ class TransactionController extends Controller
                 $mt_code = MaterialInventory::where('material_description', $material_description)->first();
                 if($mt_code){
                     $materialIncoming->material_code = $mt_code->material_code;
-
                     $material_code = $mt_code->material_code;
+
                 } else {
                     $mt_code = CodeGenerator::where('remark', 'material')->first();
                     $material_code = $mt_code->prefix . str_pad($mt_code->index, $mt_code->length, '0', STR_PAD_LEFT);
@@ -138,11 +158,13 @@ class TransactionController extends Controller
                 }
 
                 $materialIncoming->material_description = $material_description;
+                $materialIncoming->material_category = $material_category;
+                $materialIncoming->uom = $uom;
                 $materialIncoming->quantity = $quantity;
                 $materialIncoming->price = $price;
                 $materialIncoming->vendor = $vendor;
                 $materialIncoming->payment = $payment;
-                $materialIncoming->date_in = date('Y-m-d');
+                $materialIncoming->date_in = date('Y-m-d', $date_in);
                 $materialIncoming->created_at = date('Y-m-d H:i:s');
                 $materialIncoming->updated_at = date('Y-m-d H:i:s');
                 $materialIncoming->save();
@@ -159,21 +181,26 @@ class TransactionController extends Controller
                         $inventory = new MaterialInventory();
                         $inventory->material_code = $material_code;
                         $inventory->material_description = $material_description;
+                        $inventory->material_category = $material_category;
+                        $inventory->uom = $uom;
                         $inventory->quantity = $quantity;
                         $inventory->price = $price;
                         $inventory->created_at = date('Y-m-d H:i:s');
                         $inventory->updated_at = date('Y-m-d H:i:s');
-                        $inventory->save();
-                        
+                        $inventory->save();                        
                     } else {
                         $inventory->quantity = $inventory->quantity + $quantity;
-                    }                 
+                        $inventory->material_category = $material_category;
+                        $inventory->uom = $uom;
+                        $inventory->updated_at = date('Y-m-d H:i:s');
+                        $inventory->save();
+                    }
 
-                    $inventory->save();
                 } else {
                     $inventory = new MaterialInventory();
                     $inventory->material_code = $material_code;
                     $inventory->material_description = $material_description;
+                    $inventory->material_category = $material_category;
                     $inventory->quantity = $quantity;
                     $inventory->price = $price;
                     $inventory->created_at = date('Y-m-d H:i:s');
@@ -208,14 +235,14 @@ class TransactionController extends Controller
                 // insert to material_transaction_logs
                 $materialTransactionLogs = new MaterialTransactionLogs();
                 $materialTransactionLogs->material_code = $material_code;
-                $materialTransactionLogs->material_description = $material_description;
+                $materialTransactionLogs->material_description = $material_description;                
+                $materialTransactionLogs->uom = $uom;
                 $materialTransactionLogs->quantity = $quantity;
                 $materialTransactionLogs->price = $price;
                 $materialTransactionLogs->category = 'incoming';
                 $materialTransactionLogs->created_at = date('Y-m-d H:i:s');
                 $materialTransactionLogs->updated_at = date('Y-m-d H:i:s');
                 $materialTransactionLogs->save();
-
 
             }
 
@@ -429,6 +456,61 @@ class TransactionController extends Controller
                 'message' => $th->getMessage(),
             ];
             return response()->json($response, 500);            
+        }
+    }
+
+    public function fetchTransactionLogs(Request $request)
+    {
+        try {
+            $category = $request->get('category');                    
+            $material = $request->get('material');                        
+
+            $date = $request->get('date');
+
+            $transactionLogs = MaterialTransactionLogs::select('material_code', 'material_description', 'quantity', 'price', 'category', DB::raw('DATE_FORMAT(created_at, "%d-%M-%Y") as date'));
+
+            if($category != 'all'){
+                $transactionLogs = $transactionLogs->where('category', $category);
+            }            
+                        
+            if(!empty($material)){                
+                $material = explode(',', $material);
+                // $transactionLogs = $transactionLogs->whereIn('material_code', $material);                                
+                if(count($material) > 1){
+                    $transactionLogs = $transactionLogs->whereIn('material_description', $material);
+                } else {
+                    $transactionLogs = $transactionLogs->where('material_description', $material[0]);
+                }
+            }
+            
+            if(!empty($date)){
+                $date = explode(' - ', $date);
+                $start_date = date('Y-m-d', strtotime($date[0]));
+                $end_date = date('Y-m-d', strtotime($date[1]));
+
+                $transactionLogs = $transactionLogs->whereBetween('created_at', [$start_date, $end_date]);
+            }
+                // $start_date = date('Y-m-01');
+                // $end_date = date('Y-m-t');
+
+                // $transactionLogs = $transactionLogs->whereBetween('created_at', [$start_date, $end_date]);
+            // }
+
+            $transactionLogs = $transactionLogs->orderBy('created_at', 'desc')->get();                            
+
+            $response = [
+                'status' => 200,
+                'message' => 'Data fetched successfully',
+                'logs' => $transactionLogs
+            ];
+            return response()->json($response, 200);
+
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 500,
+                'message' => $th->getMessage(),
+            ];
+            return response()->json($response, 500);
         }
     }
 }

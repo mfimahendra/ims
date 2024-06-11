@@ -22,11 +22,11 @@ class MaterialInventoryController extends Controller
     public function fetchInventory()
     {
         try {
-            // $materialInventories = MaterialInventory::orderBy('material_description', 'asc')->get();
-            $materialInventories = MaterialInventory::select('material_code', 'material_description', DB::raw('SUM(quantity) as quantity'), DB::raw('MAX(price) as price'))
-                ->orderBy('material_description', 'asc')
-                ->groupBy('material_code', 'material_description')
-                ->get();
+            $materialInventories = MaterialInventory::orderBy('material_description', 'asc')->get();
+            // $materialInventories = MaterialInventory::select('material_code', 'material_description', DB::raw('SUM(quantity) as quantity'), DB::raw('MAX(price) as price'))
+            //     ->orderBy('material_description', 'asc')
+            //     ->groupBy('material_code', 'material_description')
+            //     ->get();
             $response = [
                 'status' => 200,
                 'message' => 'Material Inventory fetched successfully',

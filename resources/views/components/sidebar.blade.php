@@ -58,7 +58,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="{{ route('transaction.transactionLogsIndex') }}" class="nav-link">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                         <p>Riwayat <small>(LOGS)</small></p>
                     </a>

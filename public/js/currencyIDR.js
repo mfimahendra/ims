@@ -1,7 +1,9 @@
 function convertToIDR(number) {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
-        currency: 'IDR'
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
     }).format(number);
 }
 
@@ -37,5 +39,5 @@ function numberToWords(number) {
         }
     }
 
-    return convertToWords(number) + " rupiah";
+    return convertToWords(number);
 }

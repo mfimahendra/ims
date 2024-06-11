@@ -4,10 +4,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Inventory Management System</title>        
+    <title>Inventory Management System</title>
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/fontawesome-free/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('fontawesome/css/all.css') }}">
-    <link rel="stylesheet" href="{{ asset('adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') }}">        
+    <link rel="stylesheet" href="{{ asset('adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css') }}">
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/toastr/toastr.min.css') }}">
     <link rel="stylesheet" href="{{ asset('adminlte/dist/css/adminlte.min.css') }}">
     <style>
@@ -58,31 +58,29 @@
 
     @endguest
             
-        <script src="{{ asset('adminlte/plugins/jquery/jquery.min.js') }}"></script>    
+        <script src="{{ asset('adminlte/plugins/jquery/jquery.min.js') }}"></script>
         @yield('scripts')
-        <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>            
+        <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
         <script src="{{ asset('adminlte/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js') }}"></script>
-        <script src="{{ asset('adminlte/dist/js/adminlte.js') }}"></script>
         <script src="{{ asset('adminlte/plugins/toastr/toastr.min.js') }}"></script>
+        <script src="{{ asset('adminlte/dist/js/adminlte.js') }}"></script>
         <script src="{{ asset('js/currencyIDR.js') }}"></script>
-
             
         <script>
-        const success_audio = new Audio("{{ asset('audio/success.mp3') }}");
-        const error_audio = new Audio("{{ asset('audio/error.mp3') }}");
-        // sidebar nav_link isOpening when open that page
-        $(document).ready(function() {
-            var url = window.location;            
-            // for sidebar menu entirely but not cover treeview
-            $('ul.nav-sidebar a').filter(function() {
-                return this.href == url;
-            }).addClass('active');
-            // for treeview
-            $('ul.nav-treeview a').filter(function() {
-                return this.href == url;
-            }).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
-        });        
-
+            const success_audio = new Audio("{{ asset('audio/success.mp3') }}");
+            const error_audio = new Audio("{{ asset('audio/error.mp3') }}");
+            // sidebar nav_link isOpening when open that page
+            $(document).ready(function() {
+                var url = window.location;            
+                // for sidebar menu entirely but not cover treeview
+                $('ul.nav-sidebar a').filter(function() {
+                    return this.href == url;
+                }).addClass('active');
+                // for treeview
+                $('ul.nav-treeview a').filter(function() {
+                    return this.href == url;
+                }).parentsUntil(".nav-sidebar > .nav-treeview").addClass('menu-open').prev('a').addClass('active');
+            });
         </script>
     </body>
 

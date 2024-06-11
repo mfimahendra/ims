@@ -4,13 +4,13 @@
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
     <style>
-        #input_title_value {
+        #title_value {
             font-size: 1.2em;
             font-weight: 600;
             text-align: center;
         }
 
-        #input_title_value_additional{
+        #title_value_additional{
             font-size: 1.2em;
             font-weight: 600;
             text-align: center;
@@ -19,6 +19,27 @@
         .index-title {
             color: #333;
             font-size:
+        }
+
+        #tableNota tr th {
+            font-size: 14px;
+            text-align: center;
+            padding: 5px;
+            vertical-align: middle;
+        }
+        #tableNota tr td {            
+            padding: 5px;
+        }
+
+        #tableAdditional tr th {
+            font-size: 14px;
+            text-align: center;
+            padding: 5px;
+            vertical-align: middle;
+        }
+
+        #tableAdditional tr td {
+            padding: 5px;
         }
     </style>
 @endsection
@@ -45,18 +66,12 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header">
-                                <h3 id="input_title_value">
-                                    Penggunaan Barang
-                                </h3>
-                                <div class="row">
-                                    <div class="col-6">
-        
-                                    </div>
-                                    <div class="col-6">
-        
-                                    </div>
-                                </div>
+                            <div class="card-header">                                
+                                <p style="margin: 0; font-weight:bold;">
+                                    <span id="title_category"></span>
+                                    <span id="title_vehicle"></span>
+                                    <span id="title_date"></span>
+                                </p>                                
                             </div>
         
                             <div class="card-body p-0">
@@ -65,6 +80,7 @@
                                         <tr>
                                             <th style="width: 1%;">No</th>
                                             <th>Nama Barang</th>
+                                            <th>Kategori</th>
                                             <th style="width: 1%; text-align:center; vertical-align:middle;">Stock Awal</th>
                                             <th style="width: 1%; text-align:center; vertical-align:middle;">Stock Akhir</th>
                                             <th style="width: 1%; text-align:center; vertical-align:middle;">Qty</th>
@@ -85,9 +101,7 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h3 id="input_title_value_additional">
-                                    Tambahan
-                                </h3>
+                                <p style="text-align: center; padding:0; margin:0;"><b>Tambahan</b></p>
                                 <div class="row">
                                     <div class="col-6">
         
@@ -120,7 +134,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6">
+            <div class="col-4">
                 {{-- Input form --}}
                 <div class="form-group">
                     <label>Kategori<span class="text-danger">*</span></label>
@@ -173,11 +187,11 @@
                                             </div>
                                             <div class="row">                                                
                                                 <div class="col-3">
-                                                    <label for="stock_awal_barang">Stok Awal</label>                                                    
+                                                    <label for="stock_awal_barang">Stc Awal</label>                                                    
                                                     <input type="text" class="form-control" id="stock_awal_barang" readonly>
                                                 </div>                                                
                                                 <div class="col-3">
-                                                    <label for="stock_akhir_barang">Stok Akhir</label>
+                                                    <label for="stock_akhir_barang">Stc Akhir</label>
                                                     <input type="text" class="form-control" id="stock_akhir_barang" readonly>
                                                 </div>
                                             </div>
@@ -217,8 +231,8 @@
                         </div>
                         <div class="col-6">
                             <button style="width:100%;" class="btn btn-lg btn-primary" id="btn_submit" onclick="submitCart()">
-                                <i class="fa fa-check"></i>
-                                CONFIRM
+                                <i class="fa fa-save"></i>
+                                Simpan
                             </button>
                         </div>
                     </div>
@@ -577,6 +591,7 @@
             $('#select_vehicle').val(null).trigger('change');
             $('#select_driver').val(null).trigger('change');
             renderCart();
+            toastr.success('Data berhasil dihapus');
         }
 
         function submitCart() {
@@ -613,7 +628,6 @@
         }
 
         $(function() {
-
             $('.select-vendor').select2({
                 theme: 'bootstrap4',
                 placeholder: 'Pilih Toko',
@@ -626,21 +640,17 @@
                 allowClear: true,
                 tags: true,
             })
-            // event
+            // event            
 
             // 2 event select title value
-
             $('#select_category').on('select2:select', function(e) {
-                var data = e.params.data;
-                var vehicle = $('#select_vehicle').val();
-                $('#input_title_value').text(data.text + ' ' + vehicle);
+                var data = e.params.data;                            
+                $('#title_category').text(data.text);
             });
 
-            $('#select_vehicle').on('select2:select', function(e) {
-                // Title 
-                var data = e.params.data;
-                var category = $('#select_category').val();
-                $('#input_title_value').text(category + ' ' + data.text);
+            $('#select_vehicle').on('select2:select', function(e) {                
+                var data = e.params.data;                
+                $('#title_vehicle').text(data.text);
 
                 // Driver                                
                 let selected_vehicle = $('#select_vehicle').val();

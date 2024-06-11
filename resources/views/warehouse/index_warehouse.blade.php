@@ -525,10 +525,11 @@
             table += '</table>';
 
             $('#inventories_table_container').html(table);
-        }    
+        }
+
+        // event listener                
         
-        
-        $(function() {
+        $(function() {                        
 
             //Date range picker
             $('.datepicker').daterangepicker({

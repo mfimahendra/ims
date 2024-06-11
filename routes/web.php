@@ -31,4 +31,8 @@ Route::prefix('transaction')->name('transaction.')->middleware('auth')->group(fu
     Route::get('/outgoing', [TransactionController::class, 'outgoingIndex'])->name('outgoingIndex');
     Route::get('/fetch/outgoing/data', [TransactionController::class, 'fetchOutgoingData'])->name('fetchOutgoingData');    
     Route::post('/submit/outgoing/data', [TransactionController::class, 'submitOutgoingData'])->name('submitOutgoingData');
+
+    // Transaction Logs
+    Route::get('/logs', [TransactionController::class, 'transactionLogsIndex'])->name('transactionLogsIndex');    
+    Route::get('/fetch/transaction/logs', [TransactionController::class, 'fetchTransactionLogs'])->name('fetchTransactionLogs');
 });
