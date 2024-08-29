@@ -16,6 +16,8 @@ use App\Models\Vehicle;
 use App\Models\Driver;
 use App\Models\Additional;
 use App\Models\CodeGenerator;
+use App\Models\OutgoingSlip;
+use App\Models\FinancialAccounts;
 
 class TransactionController extends Controller
 {    
@@ -26,12 +28,20 @@ class TransactionController extends Controller
 
     public function incomingIndex()
     {
-        return view('transaction.incoming');
+        $financial_accounts = FinancialAccounts::select('account_id')->get();
+
+        return view('transaction.incoming',[
+            'financial_accounts' => $financial_accounts
+        ]);
     }
 
     public function outgoingIndex()
     {
-        return view('transaction.outgoing');
+        $financial_accounts = FinancialAccounts::select('account_id')->get();
+
+        return view('transaction.outgoing',[
+            'financial_accounts' => $financial_accounts
+        ]);
     }
 
     public function transactionLogsIndex()
@@ -78,9 +88,9 @@ class TransactionController extends Controller
     public function fetchOutgoingData()
     {
         try {
-            $materialInventories = MaterialInventory::select('material_code', 'material_description', DB::raw('SUM(quantity) as quantity'), DB::raw('MAX(price) as price'))
+            $materialInventories = MaterialInventory::select('material_code', 'material_description', 'material_category', DB::raw('SUM(quantity) as quantity'), DB::raw('MAX(price) as price'))
                 ->orderBy('material_description', 'asc')
-                ->groupBy('material_code', 'material_description')
+                ->groupBy('material_code', 'material_description', 'material_category')
                 ->where('quantity', '>', 0)
                 ->get();
 
@@ -123,11 +133,14 @@ class TransactionController extends Controller
             $incoming_vendor = $request->get('vendor');
             $incoming_date = $request->get('date');
             $cart = $request->get('cart');
+
+            $account = $request->get('account');
                         
             $cart = json_decode($cart, true);
 
             // slip_code
-            $slip_code = CodeGenerator::where('remark', 'invoice')->first();                
+            $slip_code = CodeGenerator::where('remark', 'invoice')->first();
+            
             $slip_code = $slip_code->prefix . str_pad($slip_code->index, $slip_code->length, '0', STR_PAD_LEFT);
 
             foreach ($cart as $key => $value) {
@@ -137,20 +150,20 @@ class TransactionController extends Controller
                 $quantity = $value['qty'];
                 $price = $value['price'];
                 $payment = $value['payment'];
-                $vendor = $incoming_vendor;
+                $in_vendor = $incoming_vendor;
                 $date_in = strtotime($incoming_date);
 
                 // material_incomings
                 $materialIncoming = new MaterialIncoming();                
 
                 $materialIncoming->slip_code = $slip_code;
+
                 
                 // material_code find from material_inventory
                 $mt_code = MaterialInventory::where('material_description', $material_description)->first();
                 if($mt_code){
                     $materialIncoming->material_code = $mt_code->material_code;
                     $material_code = $mt_code->material_code;
-
                 } else {
                     $mt_code = CodeGenerator::where('remark', 'material')->first();
                     $material_code = $mt_code->prefix . str_pad($mt_code->index, $mt_code->length, '0', STR_PAD_LEFT);
@@ -159,12 +172,27 @@ class TransactionController extends Controller
 
                 $materialIncoming->material_description = $material_description;
                 $materialIncoming->material_category = $material_category;
+
+                // if material category not on material_categories table insert into it
+                $check_material_category = MaterialCategory::where('material_category', $material_category)->first();
+                if(!$check_material_category){
+                    $materialCategory = new MaterialCategory();
+                    $materialCategory->material_category = $material_category;
+                    $materialCategory->created_at = date('Y-m-d H:i:s');
+                    $materialCategory->updated_at = date('Y-m-d H:i:s');
+                    $materialCategory->save();
+                }
+
                 $materialIncoming->uom = $uom;
                 $materialIncoming->quantity = $quantity;
                 $materialIncoming->price = $price;
-                $materialIncoming->vendor = $vendor;
+                $materialIncoming->vendor = $in_vendor;
                 $materialIncoming->payment = $payment;
                 $materialIncoming->date_in = date('Y-m-d', $date_in);
+
+                // account
+                $materialIncoming->account_id = $account;
+
                 $materialIncoming->created_at = date('Y-m-d H:i:s');
                 $materialIncoming->updated_at = date('Y-m-d H:i:s');
                 $materialIncoming->save();
@@ -214,22 +242,22 @@ class TransactionController extends Controller
                 
                 
                 // make conditional if vendor new or existing
-                $vendor = Vendor::where('vendor_name', $vendor)->first();
-                if(!$vendor){
+                $check_vendor = Vendor::where('vendor_name', $in_vendor)->first();
+                if(!$check_vendor){
                     $vendor = new Vendor();
 
                     // vendor_code generator
-                    $vendor_code = CodeGenerator::where('remark', 'vendor')->first();
-                    $vendor_code = $vendor_code->prefix . str_pad($vendor_code->index, $vendor_code->length, '0', STR_PAD_LEFT);
-                    $vendor->vendor_code = $vendor_code;
-                    $vendor->vendor_name = $vendor;
+                    $get_vendor_code = CodeGenerator::where('remark', 'vendor')->first();
+                    $vendor_code = $get_vendor_code->prefix . str_pad($get_vendor_code->index, $get_vendor_code->length, '0', STR_PAD_LEFT);
+                    $vendor->vendor_id = $vendor_code;
+                    $vendor->vendor_name = $incoming_vendor;
                     $vendor->created_at = date('Y-m-d H:i:s');
                     $vendor->updated_at = date('Y-m-d H:i:s');
                     $vendor->save();
 
                     // update code generator
-                    $vendor_code->index = $vendor_code->index + 1;
-                    $vendor_code->save();
+                    $get_vendor_code->index = $get_vendor_code->index + 1;
+                    $get_vendor_code->save();
                 }
 
                 // insert to material_transaction_logs
@@ -271,12 +299,22 @@ class TransactionController extends Controller
     }
 
     public function submitOutgoingData(Request $request)
-    {        
+    {                
         $cart = $request->get('cart');
         $additional_cart = $request->get('additional_cart');        
 
         $cart = json_decode($cart, true);
         $additional_cart = json_decode($additional_cart, true);
+
+        dd($request->all());
+
+        // "slip" => "20240803OUT00001"
+        // "category" => "Perawatan"
+        // "account" => "Kas Kecil Gudang"
+        // "date" => "03-August-2024"
+        // "vehicle" => "VH00002"
+        // "driver" => "DRV0002"
+        // "cart" => "[{"product":"Accu incoe N-120","qty":"1","outgoing_type":"Barang"},{"product":"Acitilien","qty":"20","outgoing_type":"Barang"},{"product":"Bensin","qty":"10","outgoing_type":"Tambahan"}]"
 
         // validator if category is empty, vehicle is empty, driver is empty, product is empty, qty is empty
         foreach ($cart as $key => $value) {
@@ -287,30 +325,17 @@ class TransactionController extends Controller
                 ];
                 return response()->json($response, 500);
             }
-        }
-
-        // validator if category is empty, vehicle is empty, driver is empty, additional is empty, qty is empty additional
-        foreach ($additional_cart as $key => $value) {
-            if(empty($value['category']) || empty($value['vehicle']) || empty($value['driver']) || empty($value['additional']) || empty($value['qty'])){
-                $response = [
-                    'status' => 500,
-                    'message' => 'Data tidak boleh kosong',
-                ];
-                return response()->json($response, 500);
-            }
-        }            
+        }        
         
         DB::beginTransaction();    
         try {
             $slip_code = CodeGenerator::where('remark', 'outgoing')->first();
             $slip_code = $slip_code->prefix . str_pad($slip_code->index, $slip_code->length, '0', STR_PAD_LEFT);
 
-            foreach ($cart as $key => $value) {
-                $category = $value['category'];
+            foreach ($cart as $key => $value) {                
                 $material_description = $value['product'];
-                $quantity = $value['qty'];                
-                $vehicle = $value['vehicle'];
-                $driver = $value['driver'];
+                $quantity = $value['qty'];
+                $type = $value['outgoing_type'];
 
                 // Update from Master Material Inventory
                 // find from material_inventory, select lowest price, then if quantity < 0, subtract from the highest price then delete the lowest price from inventory
@@ -357,10 +382,7 @@ class TransactionController extends Controller
 
                     // OutgoingHistories
                     $outgoingHistories = new OutgoingHistories();
-                    $outgoingHistories->outgoing_id = $slip_code;
-                    $outgoingHistories->category = $category;
-                    $outgoingHistories->vehicle_id = $vehicle;
-                    $outgoingHistories->driver_id = $driver;
+                    $outgoingHistories->outgoing_id = $slip_code;                    
                     $outgoingHistories->type = 'Barang';
                     $outgoingHistories->description = $material_description;
                     $outgoingHistories->quantity = $quantity + $current_qty;
@@ -422,10 +444,7 @@ class TransactionController extends Controller
                 // Insert to outgoing_histories
                 $outgoingHistories = new OutgoingHistories();
 
-                $outgoingHistories->outgoing_id = $slip_code;
-                $outgoingHistories->category = $category;
-                $outgoingHistories->vehicle_id = $vehicle;
-                $outgoingHistories->driver_id = $driver;
+                $outgoingHistories->outgoing_id = $slip_code;                
                 $outgoingHistories->type = 'Tambahan';
                 $outgoingHistories->description = $additional_name;
                 $outgoingHistories->quantity = $quantity;
@@ -435,6 +454,18 @@ class TransactionController extends Controller
                 $outgoingHistories->updated_at = date('Y-m-d H:i:s');
                 $outgoingHistories->save();
             }
+
+            $outgoingSlips = new OutgoingSlip();
+            $outgoingSlips->outgoing_id = $slip_code;
+            $outgoingSlips->status = 0;
+            $outgoingSlips->category = $category;
+            $outgoingSlips->vehicle_id = $vehicle;
+            $outgoingSlips->driver_id = $driver;
+            $outgoingSlips->created_by = Auth::user()->name;
+            $outgoingSlips->created_at = date('Y-m-d H:i:s');
+            $outgoingSlips->updated_at = date('Y-m-d H:i:s');
+            $outgoingSlips->save();
+
 
             // update code generator
             $slip_code = CodeGenerator::where('remark', 'outgoing')->first();
@@ -502,6 +533,44 @@ class TransactionController extends Controller
                 'status' => 200,
                 'message' => 'Data fetched successfully',
                 'logs' => $transactionLogs
+            ];
+            return response()->json($response, 200);
+
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 500,
+                'message' => $th->getMessage(),
+            ];
+            return response()->json($response, 500);
+        }
+    }
+
+    public function fetchUncompleted()
+    {
+        try {
+            $outgoingSlips = OutgoingSlip::select('*', DB::raw('DATE_FORMAT(created_at, "%d-%M-%Y") as date'))
+                ->where('status', 0)                                
+                ->get();
+            $outgoingHistories = OutgoingHistories::whereIn('outgoing_id', $outgoingSlips->pluck('outgoing_id'))->get();
+
+            // foreach ($outgoingHistories as $outgoingHistory) {
+            //     $outgoingHistory['history_id_with_date'] =date('Ymd', strtotime($outgoingHistory['created_at'])) . $outgoingHistory->outgoing_id; 
+            // }
+            foreach ($outgoingSlips as $outgoingSlip) {
+                $outgoingSlip['history_id_with_date'] =date('Ymd', strtotime($outgoingSlip['created_at'])) . $outgoingSlip['outgoing_id'];
+            }
+                
+            $slip = $outgoingSlips->pluck('history_id_with_date')->unique();
+
+            // re array $slip
+            $slip = $slip->values()->all();
+
+            $response = [
+                'status' => 200,
+                'message' => 'Data fetched successfully',
+                'slip' => $slip,
+                'slipItems' => $outgoingSlips,
+                'histories' => $outgoingHistories,
             ];
             return response()->json($response, 200);
 

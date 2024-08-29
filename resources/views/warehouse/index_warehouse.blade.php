@@ -118,6 +118,9 @@
 
             $('body').addClass('sidebar-collapse');
 
+            // tes truka
+            console.log(convertToINT('Rp 1.250.000'));
+
         });
 
         function fetchData() {
@@ -205,6 +208,17 @@
                     "visible": false
                 }]
             });
+
+            // table tfoot add total sum but pass to convertToINT
+            // table.columns([2, 3, 5]).every(function() {
+            //     var sum = this
+            //         .data()
+            //         .reduce(function(a, b) {
+            //             return convertToINT(a) + convertToINT(b);
+            //         }, 0);
+
+            //     $(this.footer()).html(convertToIDR(sum));
+            // });
 
             table.buttons().container().appendTo('#inventories_table_wrapper .col-md-6:eq(0)');
 

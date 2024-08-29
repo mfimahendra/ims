@@ -30,9 +30,23 @@ Route::prefix('transaction')->name('transaction.')->middleware('auth')->group(fu
     // Outgoing
     Route::get('/outgoing', [TransactionController::class, 'outgoingIndex'])->name('outgoingIndex');
     Route::get('/fetch/outgoing/data', [TransactionController::class, 'fetchOutgoingData'])->name('fetchOutgoingData');    
+    Route::get('/fetch/outgoing/uncompleted', [TransactionController::class, 'fetchUncompleted'])->name('fetchUncompleted');    
     Route::post('/submit/outgoing/data', [TransactionController::class, 'submitOutgoingData'])->name('submitOutgoingData');
+    Route::post('/submit/outgoing/complete', [TransactionController::class, 'submitOutgoingComplete'])->name('submitOutgoingComplete');
 
     // Transaction Logs
     Route::get('/logs', [TransactionController::class, 'transactionLogsIndex'])->name('transactionLogsIndex');    
     Route::get('/fetch/transaction/logs', [TransactionController::class, 'fetchTransactionLogs'])->name('fetchTransactionLogs');
+});
+
+// FINANCIAL ADMIN ROUTES
+// 1. CREATE   -> create financial account
+// 2. READ     -> view financial account, view financial transactions
+// 3. UPDATE   -> update financial account, delete financial transactions
+// 4. DELETE   -> delete financial account, delete financial transcations
+
+Route::prefix('financial')->name('financial.')->middleware('auth')->group(function () {
+    Route::get('/', function () {
+        return "Financial";
+    });
 });

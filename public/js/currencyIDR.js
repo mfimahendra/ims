@@ -7,6 +7,10 @@ function convertToIDR(number) {
     }).format(number);
 }
 
+function convertToINT(string){        
+    return parseInt(string.replace(/[^0-9]/g, ''));
+}
+
 
 function numberToWords(number) {
     var words = [

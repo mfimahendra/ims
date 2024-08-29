@@ -1,0 +1,26 @@
+Done:
+1	Tanggal masukan dan pengeluaran
+4	Satuan Pcs saat input
+6	kategori input, samping barang(sudah tabel)
+7	Ditambahkan sum pada input sebelum masuk cart
+2	Slip dapat disimpan dan ditambahkan lagi
+
+Progress:
+3.  selesaikan (Belum)(Adit)
+8	ditambahkan qty, satuan, harga satuan (Hendra)
+
+EZ:
+3	Jumlah total di kategori inventories
+
+Belum:
+5	colvis per kategori, jika null tidak menampilkan kolom
+
+9	export excel dengan, data masukan, inventori, pengeluaran
+10	approval, po 
+11	export jurnal excel, do, contan, inv, out  P
+
+12	hutang do, ada halaman untuk waktu pembelian, dan penglunasan
+
+13	Pengeluaran PT, barang ini milik 
+
+

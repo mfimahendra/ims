@@ -2,7 +2,8 @@
 
 @section('styles')
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">    
+    <link rel="stylesheet" href="{{ asset('js/gijgo/css/gijgo.min.css') }}">
     <style>
         #title_value {
             font-size: 1.2em;
@@ -19,6 +20,16 @@
         .index-title {
             color: #333;
             font-size:
+        }
+
+        #tableSlip tr th {
+            font-size: 14px;
+            text-align: center;
+            padding: 5px;
+            vertical-align: middle;
+        }
+        #tableSlip tr td {            
+            padding: 5px;
         }
 
         #tableNota tr th {
@@ -41,6 +52,32 @@
         #tableAdditional tr td {
             padding: 5px;
         }
+
+        .label_td{
+            font-weight: bold;
+            width: 10%;
+            background-color: darkgray;;
+        }
+
+        .value_selected{
+            width: 50%;
+            background-color: #f3f3f3;
+        }
+        
+        .slip_btn:nth-child(even):hover{
+            background-color: #fff000;
+            cursor: pointer;
+        }
+
+        .slip_btn:nth-child(odd):hover{
+            background-color: #fff000;
+            cursor: pointer;
+        }
+
+        .slip_container > * {
+            
+        }
+        
     </style>
 @endsection
 
@@ -49,40 +86,86 @@
 @endsection
 
 @section('content-header')
-    <div class="row">
+    {{-- <div class="row">
         <div class="col-12" align="right">
             <button class="btn btn-sm btn-primary">
                 <i class="fa fa-history"></i>
                 Riwayat Pengeluaran Sparepart
             </button>
         </div>
-    </div>
+    </div> --}}
 @endsection
 
 @section('content')
     <div class="container">
         <div class="row">
+            <div class="col-2">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body p-0">
+                                <table id="tableSlip" class="table table-bordered table-striped table-hovered">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:1%;">#</th>
+                                            <th>Slip</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>                                        
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="col-6">
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">                                
-                                <p style="margin: 0; font-weight:bold;">
-                                    <span id="title_category"></span>
-                                    <span id="title_vehicle"></span>
-                                    <span id="title_date"></span>
-                                </p>                                
+                                <div class="row">
+                                    <div class="col-4" style="font-weight: 600;">
+                                        Slip : <span id="value_slip"></span>   
+                                    </div>
+                                    <div class="col-4" style="font-weight: 600;">
+                                        Akun : <span id="value_account"></span>
+                                    </div>
+                                    <div class="col-3"></div>
+                                    <div class="col-1">
+                                        {{-- delete button --}}
+                                        <button class="btn btn-sm btn-danger btn-block" onclick="deleteThisSlip()"><i class="fa fa-times"></i></button>
+                                    </div>
+                                </div>
+
+                                <hr>                                
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <td class="label_td">Kategori</td>
+                                        <td id="value_category" class="value_selected"></td>                                        
+                                        <td class="label_td">Tanggal</td>
+                                        <td id="value_date" class="value_selected"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="label_td">Kendaraan</td>
+                                        <td id="value_vehicle" class="value_selected"></td>
+
+                                        <td class="label_td">Sopir</td>
+                                        <td id="value_driver" class="value_selected"></td>
+                                    </tr>
+                                </table>
+
                             </div>
         
                             <div class="card-body p-0">
-                                <table id="tableNota" class="table table-bordered table-striped">
+                                <table id="tableNota" class="table  table-striped">
                                     <thead>
-                                        <tr>
+                                        <tr style="background-color: #343a40; color:white;">
                                             <th style="width: 1%;">No</th>
                                             <th>Nama Barang</th>
                                             <th>Kategori</th>
-                                            <th style="width: 1%; text-align:center; vertical-align:middle;">Stock Awal</th>
-                                            <th style="width: 1%; text-align:center; vertical-align:middle;">Stock Akhir</th>
+                                            <th style="width: 12%; text-align:center; vertical-align:middle;">Stk. Awal</th>
+                                            <th style="width: 12%; text-align:center; vertical-align:middle;">Stk. Akhir</th>
                                             <th style="width: 1%; text-align:center; vertical-align:middle;">Qty</th>
                                             <th style="width: 1%; text-align:center; vertical-align:middle;">#</th>
                                         </tr>
@@ -92,35 +175,16 @@
                                     <tfoot>
                                     </tfoot>
                                 </table>
-                            </div>
-        
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <p style="text-align: center; padding:0; margin:0;"><b>Tambahan</b></p>
-                                <div class="row">
-                                    <div class="col-6">
-        
-                                    </div>
-                                    <div class="col-6">
-        
-                                    </div>
-                                </div>
-                            </div>
-        
-                            <div class="card-body p-0">
+                                <hr>
+                                <p style="padding:0 0 2% 2%; margin:0;"><b>~Tambahan</b></p>
                                 <table id="tableAdditional" class="table table-bordered table-striped">
                                     <thead>
-                                        <tr>
-                                            <th style="width: 10px;">No</th>
+                                        <tr style="background-color: #343a40; color:white;">
+                                            <th style="width: 1%;">No</th>
                                             <th>Deskripsi</th>
-                                            <th style="width: 20px">Banyaknya</th>
-                                            <th style="width: 20px">Jumlah Satuan</th>
-                                            <th style="width: 10px">#</th>
+                                            <th style="width: 1%">Banyaknya</th>
+                                            <th style="width: 17%;">Jumlah Satuan</th>
+                                            <th style="width: 10%;">#</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -129,20 +193,37 @@
                                     </tfoot>
                                 </table>
                             </div>
-        
                         </div>
                     </div>
-                </div>
+                </div>                            
             </div>
             <div class="col-4">
                 {{-- Input form --}}
                 <div class="form-group">
-                    <label>Kategori<span class="text-danger">*</span></label>
-                    <select class="form-control select-category" id="select_category" style="width: 100%;">
-                        <option value="Perbaikan">Perbaikan</option>
-                        <option value="Perawatan">Perawatan</option>
-                        <option value="Penjualan">Penjualan</option>
-                    </select>
+                    <div class="row">
+                        <div class="col-12">
+                            <label>Pilih Akun<span class="text-danger">*</span></label>
+                            <select class="form-control select-account" id="select_account" style="width: 100%;">
+                                @foreach ($financial_accounts as $account)
+                                    <option value="{{ $account->account_id }}">{{ $account->account_id }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <label>Kategori<span class="text-danger">*</span></label>
+                            <select class="form-control select-category" id="select_category" style="width: 100%;">
+                                <option value="Perbaikan">Perbaikan</option>
+                                <option value="Perawatan">Perawatan</option>
+                                <option value="Penjualan">Penjualan</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label>Tanggal<span class="text-danger">*</span></label>
+                            <input type="text" class="form-control datepicker" id="input_date" value="{{ date('d/m/Y') }}">
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group" id="select_vehicle_container">
                     <label>Kendaraan<span class="text-danger">*</span></label>
@@ -226,17 +307,31 @@
 
                 <div class="form-group">
                     <div class="row">
-                        <div class="col-6">
+                        {{-- <div class="col-6">
                             <button style="width:100%;" class="btn btn-lg btn-danger" id="btn_cancel" onclick="cancelCart()"><i class="fa fa-times"></i> Batal</button>
+                        </div> --}}
+                        <div class="col-6">
+                            <button style="width:100%;" class="btn btn-lg bg-danger" id="btn_done" onclick="cancelAll()">
+                                <i class="fa fa-times"></i>
+                                Batalkan
+                            </button>
                         </div>
                         <div class="col-6">
                             <button style="width:100%;" class="btn btn-lg btn-primary" id="btn_submit" onclick="submitCart()">
                                 <i class="fa fa-save"></i>
                                 Simpan
                             </button>
-                        </div>
+                        </div>                        
                     </div>
                 </div>
+                <div class="row" id="confirmation_button">                    
+                    <div class="col-12">
+                        <button style="width:100%;" class="btn btn-lg bg-green" id="btn_done" onclick="commitCart()">
+                            <i class="fa fa-check"></i>
+                            Selesaikan
+                        </button>
+                    </div>
+                </div>    
 
             </div>
         </div>
@@ -245,6 +340,7 @@
 
 @section('scripts')
     <script src="{{ asset('adminlte/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script src="{{ asset('js/gijgo/js/gijgo.min.js') }}"></script>
     <script>
         var cart = [];
         var additional_cart = [];
@@ -252,50 +348,54 @@
         var vehicle = [];
         var driver = [];
         var additionals = [];
-        var outgoing_type = 'Barang';        
+        var outgoing_type = 'Barang';
+        var outgoing_history = [];
+        var outgoing_slips = [];
 
-        $(document).ready(function() {
+        $(document).ready(function() {            
             fetchOutgoingData();
+
+            fetchUncompletedOutgoingData()
 
             $('body').addClass('sidebar-collapse');            
         });
 
-        function checkLocalStorageCart() {
-            var localCart = localStorage.getItem('cart');
-            var localAdditionalCart = localStorage.getItem('additional_cart');
+        // function checkLocalStorageCart() {
+        //     var localCart = localStorage.getItem('out_cart');
+        //     var localAdditionalCart = localStorage.getItem('additional_cart');
+// 
+        //     var localCategory = localStorage.getItem('select_category');
+        //     var localVehicle = localStorage.getItem('select_vehicle');
+        //     var localDriver = localStorage.getItem('select_driver');
+// 
+        //     var localDate = localStorage.getItem('outgoing_date');
 
-            var localCategory = localStorage.getItem('select_category');
-            var localVehicle = localStorage.getItem('select_vehicle');
-            var localDriver = localStorage.getItem('select_driver');            
-
-            if (localCategory && localVehicle && localDriver) {
-                $('#select_category').val(localCategory).trigger('change');
-                $('#select_vehicle').val(localVehicle).trigger('change');
-                $('#select_driver').val(localDriver).trigger('change');
-            }
+        //     if (localCategory && localVehicle && localDriver) {
+        //         $('#value_category').text(localCategory);
+        //         $('#value_vehicle').text(localVehicle);
+        //         $('#value_driver').text(localDriver);
+        //     }
                         
-            let vehicle_data = vehicle.find((item) => item.vehicle_code == localVehicle);
+        //     let vehicle_data = vehicle.find((item) => item.vehicle_code == localVehicle);
 
-            if (vehicle_data) {
-                let vehicle_id = vehicle_data.vehicle_id;                
-                $('#input_title_value').text(localCategory + ' ' + vehicle_id + ' - ' + vehicle_data.vehicle_description);            
-            }
-
-
+        //     if (vehicle_data) {
+        //         let vehicle_id = vehicle_data.vehicle_id;                
+        //         $('#input_title_value').text(localCategory + ' ' + vehicle_id + ' - ' + vehicle_data.vehicle_description);            
+        //     }
             
-            // if exist localCart and localAdditionalCart
-            if (localCart && localAdditionalCart) {
-                cart = JSON.parse(localCart);
-                additional_cart = JSON.parse(localAdditionalCart);
-                renderCart();
-            } else if (localCart) {
-                cart = JSON.parse(localCart);
-                renderCart();
-            } else if (localAdditionalCart) {
-                additional_cart = JSON.parse(localAdditionalCart);
-                renderCart();
-            }
-        }
+        //     // if exist localCart and localAdditionalCart
+        //     if (localCart || localAdditionalCart) {
+        //         cart = JSON.parse(localCart);
+        //         additional_cart = JSON.parse(localAdditionalCart);
+        //         renderCart();
+        //     } else if (localCart) {
+        //         cart = JSON.parse(localCart);
+        //         renderCart();
+        //     } else if (localAdditionalCart) {
+        //         additional_cart = JSON.parse(localAdditionalCart);
+        //         renderCart();
+        //     }
+        // }
 
         function fetchOutgoingData() {
             $.get("{{ route('transaction.fetchOutgoingData') }}", function(result) {
@@ -310,11 +410,15 @@
                     renderDriver();
                     renderInventories();
                     renderAdditional();
-                    checkLocalStorageCart();
+
+                    // checkLocalStorageCart();
                 } else {
                     toastr.error('Gagal mengambil data');
-                    checkLocalStorageCart();
+                    // checkLocalStorageCart();
                 }
+            }).fail(function(err) {
+                toastr.error('Gagal mengambil data');
+                // checkLocalStorageCart();
             });
         }
 
@@ -408,18 +512,9 @@
 
         function inputOutgoingType(value) {            
             outgoing_type = value;            
-        }        
+        }
 
         function addToCart() {
-
-            var category = $('#select_category').val();
-            var vehicle = $('#select_vehicle').val();
-            var driver = $('#select_driver').val();
-
-            if (category == null || vehicle == null || driver == null) {
-                toastr.error('Kategori, Kendaraan, Sopir tidak boleh kosong');
-                return;
-            }
 
             switch (outgoing_type) {
                 case 'Barang':                    
@@ -429,23 +524,7 @@
                     if(product == null || qty == ''){
                         toastr.error('Data tidak boleh kosong');
                         return;
-                    }
-
-                    // if category, vehicle, driver different with cart
-                    if (cart.length > 0) {
-                        var cart_category = cart[0].category;
-                        var cart_vehicle = cart[0].vehicle;
-                        var cart_driver = cart[0].driver;
-
-                        if (category != cart_category || vehicle != cart_vehicle || driver != cart_driver) {
-                            toastr.error('Kategori, Kendaraan, Sopir harus sama dengan data sebelumnya');
-
-                            $('#select_category').val(cart_category).trigger('change');
-                            $('#select_vehicle').val(cart_vehicle).trigger('change');
-                            $('#select_driver').val(cart_driver).trigger('change');
-                            return;
-                        }
-                    }
+                    }                                        
 
                     // check quantity with stock
                     var product_data = inventories.find((item) => item.material_description == product);                    
@@ -454,14 +533,23 @@
                         return;
                     }                    
                     
-                    cart.push({
-                        category: category,
-                        vehicle: vehicle,
-                        driver: driver,
-                        product: product,
-                        qty: qty,                        
-                        outgoing_type: outgoing_type,
-                    });
+                    // cart.push({                        
+                    //     product: product,
+                    //     qty: qty,                        
+                    //     outgoing_type: outgoing_type,
+                    // });
+
+                    // if product already in cart, update qty
+                    var productIndex = cart.findIndex((item) => item.product == product);
+                    if (productIndex != -1) {
+                        cart[productIndex].qty = parseInt(cart[productIndex].qty) + parseInt(qty);
+                    } else {
+                        cart.push({                        
+                            product: product,
+                            qty: qty,
+                            outgoing_type: outgoing_type,
+                        });
+                    }
 
                     // clear input
                     $('#select_product').val(null).trigger('change');
@@ -481,15 +569,25 @@
                         return;
                     }
 
-                    additional_cart.push({
-                        category: category,
-                        vehicle: vehicle,
-                        driver: driver,
-                        additional: additional,
-                        qty: qty,
-                        price: price,
-                        outgoing_type: outgoing_type,
-                    });
+                    // additional_cart.push({                        
+                    //     additional: additional,
+                    //     qty: qty,
+                    //     price: price,
+                    //     outgoing_type: outgoing_type,
+                    // });
+
+                    // if additional already in cart, update qty
+                    var additionalIndex = additional_cart.findIndex((item) => item.additional == additional);
+                    if (additionalIndex != -1) {
+                        additional_cart[additionalIndex].qty = parseInt(additional_cart[additionalIndex].qty) + parseInt(qty);
+                    } else {
+                        additional_cart.push({                        
+                            additional: additional,
+                            qty: qty,
+                            price: price,
+                            outgoing_type: outgoing_type,
+                        });
+                    }
 
                     // clear input
                     $('#select_additional').val(null).trigger('change');
@@ -517,7 +615,15 @@
                 row += `<td>${index + 1}</td>`;
                 row += `<td>${item.product}</td>`;
 
+                // get product category                
                 let product = inventories.find((inv) => inv.material_description == item.product);
+
+                if (product == undefined) {
+                    return;
+                }
+
+                row += `<td>${product.material_category}</td>`;                
+                
                 row += `<td style="text-align:center;">${product.quantity}</td>`;
 
                 row += `<td style="text-align:center;">${product.quantity - item.qty}</td>`;
@@ -579,13 +685,7 @@
 
         function cancelCart() {
             cart = [];
-            additional_cart = [];
-            localStorage.removeItem('cart');
-            localStorage.removeItem('additional_cart');
-
-            localStorage.removeItem('select_category');
-            localStorage.removeItem('select_vehicle');
-            localStorage.removeItem('select_driver');
+            additional_cart = [];                        
 
             $('#select_category').val(null).trigger('change');
             $('#select_vehicle').val(null).trigger('change');
@@ -601,6 +701,17 @@
             }            
 
             var formData = new FormData();
+
+            formData.append('slip', $('#value_slip').text());
+            formData.append('category', $('#value_category').text());
+            formData.append('account', $('#value_account').text());
+            formData.append('date', $('#value_date').text());
+                        
+            let vehicle_data = vehicle.find((item) => item.vehicle_id == $('#value_vehicle').text().split(' - ')[0]);
+            formData.append('vehicle', vehicle_data.vehicle_code);            
+
+            let driver_data = driver.find((item) => item.driver_name == $('#value_driver').text());
+            formData.append('driver', driver_data.driver_code);
 
             formData.append('cart', JSON.stringify(cart));
             formData.append('additional_cart', JSON.stringify(additional_cart));
@@ -622,12 +733,181 @@
                     }
                 },
                 error: function(err) {
+                    toastr.error(err);
+                }
+            });
+        }
+
+        // Selesaikan
+        function commitCart(){
+            if (cart.length == 0) {
+                toastr.error('Data tidak boleh kosong');
+                return;
+            }            
+
+            var formData = new FormData();
+
+            formData.append('slip', $('#value_slip').text());
+            formData.append('cart', JSON.stringify(cart));
+            formData.append('additional_cart', JSON.stringify(additional_cart));
+            formData.append('_token', '{{ csrf_token() }}');
+
+            $.ajax({
+                url: "{{ route('transaction.submitOutgoingComplete') }}",
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(result) {
+                    if (result.status == 200) {
+                        toastr.success('Data berhasil disimpan');
+                        cancelCart();
+                        fetchOutgoingData();
+                    } else {
+                        toastr.error('Gagal menyimpan data');
+                    }
+                },
+                error: function(err) {
                     toastr.error('Gagal menyimpan data');
                 }
             });
         }
 
+        function fetchUncompletedOutgoingData() {            
+            $.get("{{ route('transaction.fetchUncompleted') }}", function(result) {                
+                if (result.status == 200) {                    
+                    outgoing_history = result.histories;
+                    outgoing_slips = result.slipItems;
+
+                    let slip = result.slip;
+                    let slipLength = Object.keys(slip).length;
+                    let slipItems = result.slipItems;
+                    let data = result.histories;                                        
+                    $('#tableSlip tbody').empty();
+                    let html = '';                    
+
+                    let newslip = '<tr class="slip_btn" onclick="newSlip()">';
+                    newslip += '<td colspan="2" style="text-align:center; font-weight:bold;">Buat Slip Baru</td>';
+                    newslip += '</tr>';
+
+                    $('#tableSlip tbody').append(newslip);
+
+                    for(let i = 0; i < slipLength; i++){
+                        html += '<tr class="slip_btn" onclick="fetchOutgoingDataBySlip(\''+slip[i]+'\')">';
+                        html += `<td>${i + 1}</td>`;
+                        
+                        let formatted_slip = slip[i];
+
+                        month_shorname_id = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+                        let year = formatted_slip.substring(0, 4);
+                        let month = formatted_slip.substring(4, 6);
+                        let day = formatted_slip.substring(6, 8);
+                        let slip_number = formatted_slip.substring(8, 16);
+
+                        formatted_slip = year + '-' + month_shorname_id[parseInt(month) - 1] + '-' + day + ' ' + slip_number;
+
+                        html += `<td style="font-size:14px; font-weight:600;">${formatted_slip}</td>`;
+                        html += '</tr>';
+                    }
+
+                    $('#tableSlip tbody').append(html);
+
+
+                } else {
+                    toastr.error('Gagal mengambil data');
+                }
+            }).fail(function(err) {
+                toastr.error('Gagal mengambil data');
+            });
+        }
+
+        function newSlip() {
+            $('#value_slip').text('');
+            $('#value_category').text('');
+            $('#value_account').text('');
+            $('#value_date').text('');
+            $('#value_vehicle').text('');
+            $('#value_driver').text('');            
+
+            $('#tableNota tbody').empty();
+            $('#tableAdditional tbody').empty();
+
+            cart = [];
+            additional_cart = [];
+
+            $('#select_account').val(null).trigger('change');
+            $('#select_category').val(null).trigger('change');
+            $('#select_vehicle').val(null).trigger('change');
+            $('#select_driver').val(null).trigger('change');
+
+            $('#select_product').val(null).trigger('change');
+            $('#input_qty').val('');
+
+            $('#select_additional').val(null).trigger('change');
+            $('#input_additional_qty').val('');
+            $('#input_additional_price').val('');
+
+            $('#select_category').focus();
+        }
+
+        function updateDOMForHistoryItems(historyItems) {
+            cart = []
+            additional_cart = []
+
+            historyItems.forEach((item) => {
+                var cartItem = {
+                    'product': item['description'],
+                    'qty': item['quantity'],
+                    'outgoing_type': item['type'],
+                }
+
+                cart.push(cartItem);
+            });
+
+            renderCart();
+            
+            
+        }
+
+        function fetchOutgoingDataBySlip(slip){
+            const historySlip = outgoing_slips.find((item) => item['history_id_with_date'] == slip);
+            if (historySlip == undefined) {
+                console.log("slip not found: " + slip);
+                toastr.error('Slip: ' + slip + ' tidak ditemukan');
+                return;
+            }
+            // console.log(historySlip);
+            $('#value_slip').text(slip);
+            $('#value_account').text(historySlip['account_id']);
+            $('#value_category').text(historySlip['category']);
+            $('#value_date').text(historySlip['date']);
+            
+            var vehicle_id = historySlip['vehicle_id'];                        
+            var vehicle_data = vehicle.find((item) => item.vehicle_code == vehicle_id);            
+            $('#value_vehicle').text(vehicle_data.vehicle_id + ' - ' + vehicle_data.vehicle_description);
+
+            let driver_id = vehicle_data.driver_code;
+            let driver_data = driver.find((item) => item.driver_code == driver_id);
+            $('#value_driver').text(driver_data.driver_name);
+
+
+
+
+            const historyItems = outgoing_history.filter((item) => item['outgoing_id'] == historySlip['outgoing_id']);
+
+            updateDOMForHistoryItems(historyItems);
+        }
+
+        // Event Handler
         $(function() {
+            $('#select_account').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Pilih Akun',
+                allowClear: true,
+                tags: true,
+            });
+
             $('.select-vendor').select2({
                 theme: 'bootstrap4',
                 placeholder: 'Pilih Toko',
@@ -640,25 +920,41 @@
                 allowClear: true,
                 tags: true,
             })
-            // event            
 
-            // 2 event select title value
-            $('#select_category').on('select2:select', function(e) {
-                var data = e.params.data;                            
-                $('#title_category').text(data.text);
+            $('.datepicker').datepicker({
+                uiLibrary: 'bootstrap4',
+                format: 'dd/mm/yyyy',
+            });
+            // event
+
+            $('#select_account').on('select2:select', function(e) {
+                var data = e.params.data;
+                $('#value_account').text(data.text);
             });
 
+            // event select category
+            $('#select_category').on('select2:select', function(e) {
+                var data = e.params.data;                            
+                $('#value_category').text(data.text);
+            });
+
+            // event select vehicle
             $('#select_vehicle').on('select2:select', function(e) {                
                 var data = e.params.data;                
-                $('#title_vehicle').text(data.text);
+                $('#value_vehicle').text(data.text);
 
                 // Driver                                
-                let selected_vehicle = $('#select_vehicle').val();
-                // get vehicle_data from vehicle_id
+                let selected_vehicle = $('#select_vehicle').val();                            
                 var find_vehicle = vehicle.find((item) => item.vehicle_code == selected_vehicle);                
-                // let find_driver = driver.find((item) => item.driver_code == find_vehicle.driver_code);                
+                $('#select_driver').val(find_vehicle.driver_code).trigger('change');                
 
-                $('#select_driver').val(find_vehicle.driver_code).trigger('change');
+                var find_driver = driver.find((item) => item.driver_code == find_vehicle.driver_code);
+                $('#value_driver').text(find_driver.driver_name);
+            });
+
+            $('#select_driver').on('select2:select', function(e) {
+                var data = e.params.data;
+                $('#value_driver').text(data.text);
             });
 
             $('#select_product').on('select2:select', function(e) {
@@ -676,6 +972,17 @@
                     $('#stock_akhir_barang').css('background-color', '#e9ecef');
                     $('#stock_akhir_barang').css('color', 'black');
                 }
+            });
+
+            $('#input_date').on('change', function() {
+                // convert date to dd-mmmm-yyyy
+                var date = $('#input_date').val();
+                
+                let short_month = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                let date_split = date.split('/');
+                let month = short_month[parseInt(date_split[1]) - 1];
+
+                $('#value_date').text(date_split[0] + ' ' + month + ' ' + date_split[2]);                            
             });
 
             $('#input_qty').on('input', function() {
@@ -708,20 +1015,22 @@
                 document.querySelector('.select2-search__field').focus();
             });
 
-            // if refresh save last cart to local storage
-            window.onbeforeunload = function() {
-                // save Kategori, kendaraan, driver
-                var category = $('#select_category').val();
-                var vehicle = $('#select_vehicle').val();
-                var driver = $('#select_driver').val();
+            // // if refresh save last cart to local storage
+            // window.onbeforeunload = function() {
+            //     // save Kategori, kendaraan, driver
+            //     var category = $('#value_category').text();
+            //     var vehicle = $('#value_vehicle').text();
+            //     var driver = $('#value_driver').text();
+            //     var date = $('value_date').text();
 
-                localStorage.setItem('select_category', category);
-                localStorage.setItem('select_vehicle', vehicle);
-                localStorage.setItem('select_driver', driver);
+            //     localStorage.setItem('select_category', category);
+            //     localStorage.setItem('select_vehicle', vehicle);
+            //     localStorage.setItem('select_driver', driver);
+            //     localStorage.setItem('outgoing_date', date);
 
-                localStorage.setItem('cart', JSON.stringify(cart));
-                localStorage.setItem('additional_cart', JSON.stringify(additional_cart));
-            }
+            //     localStorage.setItem('out_cart', JSON.stringify(cart));
+            //     localStorage.setItem('additional_cart', JSON.stringify(additional_cart));
+            // }
 
         });
     </script>

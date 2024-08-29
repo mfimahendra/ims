@@ -18,15 +18,34 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-8">
                                 <div class="card-body">
                                     <div class="chart">
                                         <canvas id="barChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-6">
-                                
+                            <div class="col-4">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <a href="{{ route('transaction.incomingIndex') }}" class="btn btn-block bg-cyan" target="_blank">
+                                            <i class="fa-solid fa-boxes-packing"></i>
+                                            Barang Masuk
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="{{ route('transaction.outgoingIndex') }}" class="btn btn-block btn-warning" target="_blank">
+                                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                            Barang Keluar
+                                        </a>
+                                    </div>                                    
+                                    <div class="col-12" style="margin: 10px 0;">
+                                        <a href="{{ route('transaction.transactionLogsIndex') }}" class="btn btn-block bg-gray" target="_blank">
+                                            <i class="fa-solid fa-clock-rotate-left"></i>
+                                            Riwayat
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -88,7 +107,6 @@
                 }]
             }
         }
-
         // This will get the first returned node in the jQuery collection.        
 
         //-------------

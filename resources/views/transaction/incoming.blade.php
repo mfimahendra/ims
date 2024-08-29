@@ -46,6 +46,7 @@
             <div class="col-8">
                 <div class="card">
                     <div class="card-header row nota-header" style="padding: 5px 10px;">
+                        <div class="col">Akun : <span class="nota_header_value" id="nota_account"></span></div>
                         <div class="col">Toko : <span class="nota_header_value" id="nota_vendor"></span></div>
                         {{-- <div class="col">Invoice : <span class="nota_header_value" id="nota_invoice"></span></div> --}}
                         <div class="col" align="right">Tanggal : <span class="nota_header_value" id="nota_date"></span></div>
@@ -76,12 +77,21 @@
             </div>
             <div class="col-4">
                 {{-- Input form --}}
-                <div class="col-12" align="right">        
+                {{-- <div class="col-12" align="right">        
                     <button class="btn btn-sm btn-primary">
                         <i class="fa fa-history"></i>
                         Riwayat Barang Masuk
                     </button>
+                </div> --}}
+                <div class="form-group">
+                    <label>Pilih Akun<span class="text-danger">*</span></label>
+                    <select class="form-control select-account select2" id="select_account" style="width: 100%;">
+                        @foreach ($financial_accounts as $account)
+                            <option value="{{ $account->account_id }}">{{ $account->account_id }}</option>
+                        @endforeach
+                    </select>
                 </div>
+
                 <div class="form-group">
                     <label>Toko<span class="text-danger">*</span></label>
                     <select class="form-control select-vendor" id="select_vendor" style="width: 100%;">
@@ -169,6 +179,7 @@
             var localCart = localStorage.getItem('incoming_cart');
             var localVendor = localStorage.getItem('incoming_vendor');
             var localDate = localStorage.getItem('incoming_date');
+            var localAccount = localStorage.getItem('incoming_account');
             if (localCart) {
                 cart = JSON.parse(localCart);
                 renderCart();
@@ -180,6 +191,11 @@
             if (localDate) {
                 $('#input_date').val(localDate);
                 $('#nota_date').text(localDate);
+            }
+
+            if (localAccount) {
+                $('#nota_account').text(localAccount);
+                $('#select_account').val(localAccount).trigger('change');
             }
         }
 
@@ -403,11 +419,13 @@
                 return;
             }
 
+            let account = $('#nota_account').text();
             let vendor = $('#nota_vendor').text();
             let date = $('#nota_date').text();
 
             var formData = new FormData();
 
+            formData.append('account', account);
             formData.append('vendor', vendor);
             formData.append('date', date);
             formData.append('cart', JSON.stringify(cart));            
@@ -437,14 +455,11 @@
 
         $(function() {
 
-            $('.select2').each((_i, e) => {
-                var e = $(e);
-                e.select2({
-                    tags: true,
-                    allowClear: true,
-                    theme: 'bootstrap4',
-                    dropdownParent: e.parent()
-                });
+            $('#select_account').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Pilih Akun',
+                allowClear: true,
+                tags: true,
             });
 
             $('.datepicker').datepicker({
@@ -466,6 +481,11 @@
             })
 
             // event
+            $('#select_account').on('select2:select', function(e) {
+                var data = e.params.data;
+                $('#nota_account').text(data.text);
+            });
+
             $('#select_vendor').on('select2:select', function(e) {
                 var data = e.params.data;                
                 $('#nota_vendor').text(data.text);
@@ -505,6 +525,10 @@
                 }
                 if($('#input_date').val() != ''){
                     localStorage.setItem('incoming_date', $('#input_date').val());
+                }
+
+                if($('#nota_account').text() != ''){
+                    localStorage.setItem('incoming_account', $('#nota_account').text());
                 }
             }
 
