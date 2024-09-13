@@ -85,8 +85,8 @@
                 </div> --}}
                 <div class="form-group">
                     <label>Pilih Akun<span class="text-danger">*</span></label>
-                    <select class="form-control select-account select2" id="select_account" style="width: 100%;">
-                        @foreach ($financial_accounts as $account)
+                    <select class="form-control select-account select2" id="select_account" style="width: 100%;" data-placeholder="Pilih Akun">
+                        @foreach ($financial_accounts as $account)                            
                             <option value="{{ $account->account_id }}">{{ $account->account_id }}</option>
                         @endforeach
                     </select>

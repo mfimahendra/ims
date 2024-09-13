@@ -133,15 +133,28 @@ class TransactionController extends Controller
             $incoming_vendor = $request->get('vendor');
             $incoming_date = $request->get('date');
             $cart = $request->get('cart');
-
             $account = $request->get('account');
+
+            $validator = \Validator::make($request->all(), [
+                'vendor' => 'required',
+                'date' => 'required',
+                'cart' => 'required',
+                'account' => 'required'
+            ]);
+
+            if($validator->fails()){
+                $response = [
+                    'status' => 500,
+                    'message' => 'Data tidak lengkap',
+                ];
+                return response()->json($response, 500);
+            }
+
                         
             $cart = json_decode($cart, true);
 
-            // slip_code
-            $slip_code = CodeGenerator::where('remark', 'invoice')->first();
-            
-            $slip_code = $slip_code->prefix . str_pad($slip_code->index, $slip_code->length, '0', STR_PAD_LEFT);
+            $slip_code = CodeGenerator::where('remark', 'invoice')->first();            
+            $slip_code = $slip_code->prefix . str_pad($slip_code->index, $slip_code->length, '0', STR_PAD_LEFT);            
 
             foreach ($cart as $key => $value) {
                 $material_description = $value['product'];
@@ -262,6 +275,7 @@ class TransactionController extends Controller
 
                 // insert to material_transaction_logs
                 $materialTransactionLogs = new MaterialTransactionLogs();
+                $materialTransactionLogs->slip = $slip_code;
                 $materialTransactionLogs->material_code = $material_code;
                 $materialTransactionLogs->material_description = $material_description;                
                 $materialTransactionLogs->uom = $uom;
@@ -275,6 +289,7 @@ class TransactionController extends Controller
             }
 
             // update code generator
+            
             $slip_code = CodeGenerator::where('remark', 'invoice')->first();
             $slip_code->index = $slip_code->index + 1;
             $slip_code->save();
@@ -283,7 +298,7 @@ class TransactionController extends Controller
 
             $response = [
                 'status' => 200,
-                'message' => 'Data submitted successfully',
+                'message' => 'Data Berhasil Disimpan',
             ];
 
             return response()->json($response, 200);
@@ -299,57 +314,197 @@ class TransactionController extends Controller
     }
 
     public function submitOutgoingData(Request $request)
-    {                
+    {                                
         $cart = $request->get('cart');
-        $additional_cart = $request->get('additional_cart');        
+        $additional_cart = $request->get('additional_cart');
+
+        $category = $request->get('category');
+        $vehicle = $request->get('vehicle');
+        $driver = $request->get('driver');
+        $account_id = $request->get('account');                
 
         $cart = json_decode($cart, true);
         $additional_cart = json_decode($additional_cart, true);
-
-        dd($request->all());
-
-        // "slip" => "20240803OUT00001"
-        // "category" => "Perawatan"
-        // "account" => "Kas Kecil Gudang"
-        // "date" => "03-August-2024"
-        // "vehicle" => "VH00002"
-        // "driver" => "DRV0002"
-        // "cart" => "[{"product":"Accu incoe N-120","qty":"1","outgoing_type":"Barang"},{"product":"Acitilien","qty":"20","outgoing_type":"Barang"},{"product":"Bensin","qty":"10","outgoing_type":"Tambahan"}]"
-
+        
         // validator if category is empty, vehicle is empty, driver is empty, product is empty, qty is empty
-        foreach ($cart as $key => $value) {
-            if(empty($value['category']) || empty($value['vehicle']) || empty($value['driver']) || empty($value['product']) || empty($value['qty'])){
-                $response = [
-                    'status' => 500,
-                    'message' => 'Data tidak boleh kosong',
-                ];
-                return response()->json($response, 500);
-            }
+        if(count($cart) < 1){
+            $response = [
+                'status' => 500,
+                'message' => 'Data tidak boleh kosong',
+            ];
+            return response()->json($response, 500);
         }        
         
+        $slip = $request->get('slip');
         DB::beginTransaction();    
         try {
-            $slip_code = CodeGenerator::where('remark', 'outgoing')->first();
-            $slip_code = $slip_code->prefix . str_pad($slip_code->index, $slip_code->length, '0', STR_PAD_LEFT);
+            if($slip != null || $slip != ''){
+                $find_slip = OutgoingSlip::where('outgoing_id', $slip)->first();
+                $slip_code = $slip;
+
+                // clear outgoing histories
+                // $clearOutgoing = DB::table('outgoing_histories')->where('outgoing_id', $slip)->delete();
+            } else {
+                $slip_code = CodeGenerator::where('remark', 'outgoing')->first();                
+                $slip_code = $slip_code->prefix . str_pad($slip_code->index, $slip_code->length, '0', STR_PAD_LEFT);                
+            }
+
 
             foreach ($cart as $key => $value) {                
                 $material_description = $value['product'];
                 $quantity = $value['qty'];
-                $type = $value['outgoing_type'];
+                $type = $value['outgoing_type'];                
+
+                // Insert to outgoing_histories
+                // $outgoingHistories = new OutgoingHistories();
+
+                // $outgoingHistories->outgoing_id = $slip_code;
+                // $outgoingHistories->material_category = $type;
+                // $outgoingHistories->type = 'Barang';
+                // $outgoingHistories->description = $material_description;                            
+                // $outgoingHistories->quantity = $quantity;
+
+                // $outgoingHistories->created_by = Auth::user()->name;
+                // $outgoingHistories->created_at = date('Y-m-d H:i:s');
+                // $outgoingHistories->updated_at = date('Y-m-d H:i:s');
+                // $outgoingHistories->save();
+
+                // Insert to outgoing_histories
+                $insertOutgoingHistories = DB::table('outgoing_histories')->updateOrInsert(
+                    ['outgoing_id' => $slip_code, 'description' => $material_description],
+                    [
+                        'outgoing_id' => $slip_code,
+                        'material_category' => $type,
+                        'type' => 'Barang',
+                        'description' => $material_description,
+                        'quantity' => $quantity,
+                        'created_by' => Auth::user()->name,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s')
+                    ]
+                );
+            }
+
+            foreach ($additional_cart as $key => $value) {                
+                $additional_name = $value['additional'];
+                $quantity = $value['qty'];
+                $price = $value['price'];
+
+                // Insert to outgoing_histories
+                // $outgoingHistories = new OutgoingHistories();
+
+                // $outgoingHistories->outgoing_id = $slip_code;                
+                // $outgoingHistories->type = 'Tambahan';
+                // $outgoingHistories->description = $additional_name;
+                // $outgoingHistories->quantity = $quantity;
+                // $outgoingHistories->price = $price;
+                // $outgoingHistories->created_by = Auth::user()->name;
+                // $outgoingHistories->created_at = date('Y-m-d H:i:s');
+                // $outgoingHistories->updated_at = date('Y-m-d H:i:s');
+                // $outgoingHistories->save();
+
+                // Insert to outgoing_histories
+                $insertOutgoingHistories = DB::table('outgoing_histories')->updateOrInsert(
+                    ['outgoing_id' => $slip_code, 'description' => $additional_name],
+                    [
+                        'outgoing_id' => $slip_code,
+                        'type' => 'Tambahan',
+                        'description' => $additional_name,
+                        'quantity' => $quantity,
+                        'price' => $price,
+                        'created_by' => Auth::user()->name,
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'updated_at' => date('Y-m-d H:i:s')
+                    ]
+                );
+            }
+                        
+            DB::table('outgoing_slips')->updateOrInsert(
+                ['outgoing_id' => $slip_code],
+                [
+                    'status' => 0,
+                    'category' => $category,
+                    'vehicle_id' => $vehicle,
+                    'driver_id' => $driver,
+                    'account_id' => $account_id,
+                    'created_by' => Auth::user()->name,
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]
+            );
+
+
+            // update code generator
+            if(!$slip){
+                $slip_code = DB::table('code_generators')->where('remark', 'outgoing')->first();
+                DB::table('code_generators')->where('remark', 'outgoing')->update(['index' => $slip_code->index + 1]);
+
+                $selip = $slip_code->prefix . str_pad($slip_code->index, $slip_code->length, '0', STR_PAD_LEFT);
+            } else {
+                $selip = $slip;
+            }                    
+
+            DB::commit();
+
+            $response = [
+                'status' => 200,
+                'message' => 'Data Berhasil Disimpan dengan nomor slip ' . $selip,                
+            ];
+
+            return response()->json($response, 200);            
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            $response = [
+                'status' => 500,
+                'message' => $th->getMessage(),
+            ];
+            return response()->json($response, 500);            
+        }
+    }
+
+    public function commitOutgoingData(Request $request)
+    {
+        $slip = $request->get('slip');                        
+
+        $cart = OutgoingHistories::where('outgoing_id', $slip)->where('type', 'Barang')->get();        
+
+        if(count($cart) < 1){
+            $response = [
+                'status' => 500,
+                'message' => 'Data tidak boleh kosong',
+            ];
+            return response()->json($response, 500);
+        }
+        
+        try {            
+            foreach ($cart as $key => $value) {
+                $material_description = $value['description'];
+                $quantity = $value['quantity'];                
 
                 // Update from Master Material Inventory
                 // find from material_inventory, select lowest price, then if quantity < 0, subtract from the highest price then delete the lowest price from inventory
                 $inventory = MaterialInventory::where('material_description', $material_description)->orderBy('updated_at', 'asc')->first();
+
                 if($inventory){
                     $current_qty = $inventory->quantity;
                     $old_qty = $inventory->quantity;
-                    $old_price = $inventory->price;                    
+                    $old_price = $inventory->price;
                     $inventory->quantity = $inventory->quantity - $quantity;
                     $inventory->save();
-                } else {
+
+                    // update price to Outgoing Histories model
+                    DB::table('outgoing_histories')
+                    ->where('outgoing_id', $slip)
+                    ->where('description', $material_description)
+                    ->update([
+                        'price' => $inventory->price,
+                        'updated_at' => date('Y-m-d H:i:s')
+                        ]);
+
+                } else {                    
                     $response = [
                         'status' => 500,
-                        'message' => 'Material Inventory not found',
+                        'message' => 'Material tidak ditemukan',
                     ];
                     return response()->json($response, 500);
                 }
@@ -365,12 +520,23 @@ class TransactionController extends Controller
                     $inventory = MaterialInventory::where('material_description', $material_description)->orderBy('updated_at', 'desc')->first();
                     $inventory->quantity = $inventory->quantity + $current_qty;
                     $inventory->save();
+
+                    // update price to Outgoing Histories model as addition price
+                    DB::table('outgoing_histories')
+                    ->where('outgoing_id', $slip)
+                    ->where('description', $material_description)
+                    ->update([
+                        'price' => $inventory->price,
+                        'remark' => 'cost changes',
+                        'updated_at' => date('Y-m-d H:i:s')
+                        ]);
                 }
 
                 // Insert to material_transaction_logs            
                 // count old_qty to define price for outgoing transaction logs
                 if($current_qty < 0){
                     $materialTransactionLogs = new MaterialTransactionLogs();
+                    $materialTransactionLogs->slip = $slip;
                     $materialTransactionLogs->material_code = $inventory->material_code;
                     $materialTransactionLogs->material_description = $material_description;
                     $materialTransactionLogs->quantity = $quantity + $current_qty;
@@ -378,21 +544,11 @@ class TransactionController extends Controller
                     $materialTransactionLogs->category = 'outgoing';
                     $materialTransactionLogs->created_at = date('Y-m-d H:i:s');
                     $materialTransactionLogs->updated_at = date('Y-m-d H:i:s');
-                    $materialTransactionLogs->save();
-
-                    // OutgoingHistories
-                    $outgoingHistories = new OutgoingHistories();
-                    $outgoingHistories->outgoing_id = $slip_code;                    
-                    $outgoingHistories->type = 'Barang';
-                    $outgoingHistories->description = $material_description;
-                    $outgoingHistories->quantity = $quantity + $current_qty;
-                    $outgoingHistories->price = $old_price;
-                    $outgoingHistories->created_at = date('Y-m-d H:i:s');
-                    $outgoingHistories->updated_at = date('Y-m-d H:i:s');
-                    $outgoingHistories->save();
-                }                
+                    $materialTransactionLogs->save();                    
+                }
 
                 $materialTransactionLogs = new MaterialTransactionLogs();
+                $materialTransactionLogs->slip = $slip;
                 $materialTransactionLogs->material_code = $inventory->material_code;
                 $materialTransactionLogs->material_description = $material_description;
 
@@ -407,86 +563,106 @@ class TransactionController extends Controller
                 $materialTransactionLogs->created_at = date('Y-m-d H:i:s');
                 $materialTransactionLogs->updated_at = date('Y-m-d H:i:s');
                 $materialTransactionLogs->save();
-
-                // Insert to outgoing_histories
-                $outgoingHistories = new OutgoingHistories();
-
-                $outgoingHistories->outgoing_id = $slip_code;
-                $outgoingHistories->category = $category;
-                $outgoingHistories->vehicle_id = $vehicle;
-                $outgoingHistories->driver_id = $driver;
-                $outgoingHistories->type = 'Barang';
-                $outgoingHistories->description = $material_description;
-                
-                if($current_qty < 0){
-                    $outgoingHistories->quantity = $quantity - $old_qty;
-                } else {
-                    $outgoingHistories->quantity = $quantity;
-                }
-
-                $outgoingHistories->price = $inventory->price;
-                $outgoingHistories->created_by = Auth::user()->name;
-                $outgoingHistories->created_at = date('Y-m-d H:i:s');
-                $outgoingHistories->updated_at = date('Y-m-d H:i:s');
-                $outgoingHistories->save();
-                
-                
             }
-
-            foreach ($additional_cart as $key => $value) {
-                $category = $value['category'];
-                $additional_name = $value['additional'];
-                $quantity = $value['qty'];
-                $price = $value['price'];
-                $vehicle = $value['vehicle'];
-                $driver = $value['driver'];
-
-                // Insert to outgoing_histories
-                $outgoingHistories = new OutgoingHistories();
-
-                $outgoingHistories->outgoing_id = $slip_code;                
-                $outgoingHistories->type = 'Tambahan';
-                $outgoingHistories->description = $additional_name;
-                $outgoingHistories->quantity = $quantity;
-                $outgoingHistories->price = $price;
-                $outgoingHistories->created_by = Auth::user()->name;
-                $outgoingHistories->created_at = date('Y-m-d H:i:s');
-                $outgoingHistories->updated_at = date('Y-m-d H:i:s');
-                $outgoingHistories->save();
-            }
-
-            $outgoingSlips = new OutgoingSlip();
-            $outgoingSlips->outgoing_id = $slip_code;
-            $outgoingSlips->status = 0;
-            $outgoingSlips->category = $category;
-            $outgoingSlips->vehicle_id = $vehicle;
-            $outgoingSlips->driver_id = $driver;
-            $outgoingSlips->created_by = Auth::user()->name;
-            $outgoingSlips->created_at = date('Y-m-d H:i:s');
-            $outgoingSlips->updated_at = date('Y-m-d H:i:s');
-            $outgoingSlips->save();
+            
+            // update outgoing_slips status to 1
+            $outgoingSlip = OutgoingSlip::where('outgoing_id', $slip)->first();
+            $outgoingSlip->status = 1;
+            $outgoingSlip->updated_at = date('Y-m-d H:i:s');
+            $outgoingSlip->save();
 
 
-            // update code generator
-            $slip_code = CodeGenerator::where('remark', 'outgoing')->first();
-            $slip_code->index = $slip_code->index + 1;
-            $slip_code->save();
-
-            DB::commit();
 
             $response = [
                 'status' => 200,
                 'message' => 'Data submitted successfully',
             ];
-
-            return response()->json($response, 200);            
-        } catch (\Throwable $th) {
-            DB::rollBack();
+    
+            return response()->json($response, 200);
+            
+        } catch (\Throwable $th) {            
             $response = [
                 'status' => 500,
                 'message' => $th->getMessage(),
             ];
-            return response()->json($response, 500);            
+            return response()->json($response, 500);
+        }                
+    }
+
+    public function deleteOutgoingData(Request $request)
+    {
+        try {
+            $slip = $request->get('slip');
+            $cart = OutgoingHistories::where('outgoing_id', $slip)->get();
+            $slip = OutgoingSlip::where('outgoing_id', $slip)->first();
+
+            foreach ($cart as $key => $value) {
+                $material_description = $value['product'];
+                $quantity = $value['qty'];
+                $type = $value['outgoing_type'];
+
+                // Update from Master Material Inventory                
+                $inventory = MaterialInventory::where('material_description', $material_description)->orderBy('updated_at', 'asc')->first();
+                if($inventory){
+                    $inventory->quantity = $inventory->quantity + $quantity;
+                    $inventory->save();
+                } else {
+                    $response = [
+                        'status' => 500,
+                        'message' => 'Material Inventory not found',
+                    ];
+                    return response()->json($response, 500);
+                }
+
+                // Insert to material_transaction_logs            
+                // count old_qty to define price for outgoing transaction logs
+                if($current_qty < 0){
+                    $materialTransactionLogs = new MaterialTransactionLogs();
+                    $materialTransactionLogs->material_code = $inventory->material_code;
+                    $materialTransactionLogs->material_description = $material_description;
+                    $materialTransactionLogs->quantity = $quantity + $current_qty;
+                    $materialTransactionLogs->price = $old_price;
+                    $materialTransactionLogs->category = 'incoming';
+                    $materialTransactionLogs->created_at = date('Y-m-d H:i:s');
+                    $materialTransactionLogs->updated_at = date('Y-m-d H:i:s');
+                    $materialTransactionLogs->save();                    
+                }
+
+                $materialTransactionLogs = new MaterialTransactionLogs();
+                $materialTransactionLogs->material_code = $inventory->material_code;
+                $materialTransactionLogs->material_description = $material_description;
+
+                if($current_qty < 0){
+                    $materialTransactionLogs->quantity = $quantity - $old_qty;
+                } else {
+                    $materialTransactionLogs->quantity = $quantity;
+                }
+                
+                $material = MaterialInventory::where('material_description', $material_description)->first();
+
+                $materialTransactionLogs->price = $material->price;
+
+                $materialTransactionLogs->category = 'incoming';
+                $materialTransactionLogs->created_at = date('Y-m-d H:i:s');
+                $materialTransactionLogs->updated_at = date('Y-m-d H:i:s');
+                $materialTransactionLogs->save();
+            }
+
+            $slip->delete();
+
+            $response = [
+                'status' => 200,
+                'message' => 'Data deleted successfully',
+            ];
+
+            return response()->json($response, 200);
+
+        } catch (\Throwable $th) {
+            $response = [
+                'status' => 500,
+                'message' => $th->getMessage(),
+            ];
+            return response()->json($response, 500);
         }
     }
 

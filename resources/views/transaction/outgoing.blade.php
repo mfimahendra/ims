@@ -98,6 +98,11 @@
 
 @section('content')
     <div class="container">
+        {{-- <div class="row">
+            <div class="col-2">List Pengeluaran</div>
+            <div class="col-6">Detail Pengeluaran</div>
+            <div class="col-4">Input Pencatatan</div>
+        </div> --}}
         <div class="row">
             <div class="col-2">
                 <div class="row">
@@ -123,18 +128,21 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header">                                
+                            <div class="card-header">
+                                <input type="hidden" id="value_outgoing_id">
                                 <div class="row">
                                     <div class="col-4" style="font-weight: 600;">
                                         Slip : <span id="value_slip"></span>   
                                     </div>
                                     <div class="col-4" style="font-weight: 600;">
                                         Akun : <span id="value_account"></span>
-                                    </div>
-                                    <div class="col-3"></div>
-                                    <div class="col-1">
+                                    </div>            
+                                    <div class="col-1"></div>                        
+                                    <div class="col-3">
                                         {{-- delete button --}}
-                                        <button class="btn btn-sm btn-danger btn-block" onclick="deleteThisSlip()"><i class="fa fa-times"></i></button>
+                                        <button id="deleteSlipBtn" class="btn btn-sm btn-danger float-right" style="display: none;" onclick="deleteThisSlip()">
+                                            <i class="fa fa-trash"></i> Hapus Slip
+                                        </button>
                                     </div>
                                 </div>
 
@@ -310,13 +318,13 @@
                         {{-- <div class="col-6">
                             <button style="width:100%;" class="btn btn-lg btn-danger" id="btn_cancel" onclick="cancelCart()"><i class="fa fa-times"></i> Batal</button>
                         </div> --}}
-                        <div class="col-6">
-                            <button style="width:100%;" class="btn btn-lg bg-danger" id="btn_done" onclick="cancelAll()">
+                        <div class="col-4">
+                            <button style="width:100%;" class="btn btn-lg bg-danger" id="btn_done" onclick="cancelCart()">
                                 <i class="fa fa-times"></i>
                                 Batalkan
                             </button>
                         </div>
-                        <div class="col-6">
+                        <div class="col-8">
                             <button style="width:100%;" class="btn btn-lg btn-primary" id="btn_submit" onclick="submitCart()">
                                 <i class="fa fa-save"></i>
                                 Simpan
@@ -691,18 +699,39 @@
             $('#select_vehicle').val(null).trigger('change');
             $('#select_driver').val(null).trigger('change');
             renderCart();
-            toastr.success('Data berhasil dihapus');
+            // toastr.success('Data berhasil dihapus');
         }
 
         function submitCart() {
             if (cart.length == 0) {
                 toastr.error('Data tidak boleh kosong');
                 return;
+            }
+
+            // validator for account, category, vehicle, driver
+            if ($('#value_account').text() == '') {
+                toastr.error('Akun tidak boleh kosong');
+                return;
+            }
+
+            if ($('#value_category').text() == '') {
+                toastr.error('Kategori tidak boleh kosong');
+                return;
+            }
+
+            if ($('#value_vehicle').text() == '') {
+                toastr.error('Kendaraan tidak boleh kosong');
+                return;
+            }
+
+            if ($('#value_driver').text() == '') {
+                toastr.error('Sopir tidak boleh kosong');
+                return;
             }            
 
-            var formData = new FormData();
+            var formData = new FormData();            
 
-            formData.append('slip', $('#value_slip').text());
+            formData.append('slip', $('#value_outgoing_id').val());
             formData.append('category', $('#value_category').text());
             formData.append('account', $('#value_account').text());
             formData.append('date', $('#value_date').text());
@@ -725,9 +754,10 @@
                 processData: false,
                 success: function(result) {
                     if (result.status == 200) {                        
-                        toastr.success('Data berhasil disimpan');
+                        toastr.success(result.message);
                         cancelCart();
                         fetchOutgoingData();
+                        fetchUncompletedOutgoingData();
                     } else {
                         toastr.error('Gagal menyimpan data');
                     }
@@ -740,29 +770,61 @@
 
         // Selesaikan
         function commitCart(){
-            if (cart.length == 0) {
-                toastr.error('Data tidak boleh kosong');
-                return;
-            }            
+            
+            // check if cart or additional cart is different from the last saved one, if so return false then give error please save first 
+            // do check like I said above
+            // if different, then ask user to save first
+            // if not different, then proceed to commit
 
-            var formData = new FormData();
+            // get last saved cart
+            let last_saved_cart = outgoing_history.filter((item) => item['outgoing_id'] == $('#value_outgoing_id').val());
+            let last_saved_cart_items = [];
 
-            formData.append('slip', $('#value_slip').text());
-            formData.append('cart', JSON.stringify(cart));
-            formData.append('additional_cart', JSON.stringify(additional_cart));
+            last_saved_cart.forEach((item) => {
+                if (item['type'] == 'Barang') {
+                    last_saved_cart_items.push({
+                        'product': item['description'],
+                        'qty': item['quantity'],
+                        'outgoing_type': item['type'],
+                    });
+                } else {
+                    last_saved_cart_items.push({
+                        'additional': item['description'],
+                        'qty': item['quantity'],
+                        'price': item['price'],
+                        'outgoing_type': item['type'],
+                    });
+                }
+            });
+
+            // cart+additional_cart
+            let current_cart = cart.concat(additional_cart);
+
+            // check if cart is different
+            if (JSON.stringify(last_saved_cart_items) != JSON.stringify(current_cart)) {
+                // toastr.error('Silahkan simpan data terlebih dahulu');
+                // return;
+                submitCart();
+            }
+
+            var formData = new FormData();            
+
+            formData.append('slip', $('#value_outgoing_id').val());            
             formData.append('_token', '{{ csrf_token() }}');
 
             $.ajax({
-                url: "{{ route('transaction.submitOutgoingComplete') }}",
+                url: "{{ route('transaction.commitOutgoingData') }}",
                 type: 'POST',
                 data: formData,
                 contentType: false,
                 processData: false,
                 success: function(result) {
                     if (result.status == 200) {
-                        toastr.success('Data berhasil disimpan');
+                        toastr.success('Data berhasil tercatat');
                         cancelCart();
                         fetchOutgoingData();
+                        fetchUncompletedOutgoingData();
+
                     } else {
                         toastr.error('Gagal menyimpan data');
                     }
@@ -823,6 +885,12 @@
         }
 
         function newSlip() {
+
+            $('#value_outgoing_id').val('');
+
+            // DOM Hide delete button
+            $('#deleteSlipBtn').hide();
+
             $('#value_slip').text('');
             $('#value_category').text('');
             $('#value_account').text('');
@@ -848,6 +916,8 @@
             $('#input_additional_qty').val('');
             $('#input_additional_price').val('');
 
+            $('#tableAdditional tfoot').empty();
+
             $('#select_category').focus();
         }
 
@@ -855,29 +925,38 @@
             cart = []
             additional_cart = []
 
-            historyItems.forEach((item) => {
-                var cartItem = {
-                    'product': item['description'],
-                    'qty': item['quantity'],
-                    'outgoing_type': item['type'],
-                }
+            historyItems.forEach((item) => {                
+                if (item['type'] == 'Barang') {
+                    cart.push({
+                        'product': item['description'],
+                        'qty': item['quantity'],
+                        'outgoing_type': item['type'],
+                    });
+                } else {
+                    additional_cart.push({
+                        'additional': item['description'],
+                        'qty': item['quantity'],
+                        'price': item['price'],
+                        'outgoing_type': item['type'],
+                    });
+                }                
+            });                    
 
-                cart.push(cartItem);
-            });
-
-            renderCart();
-            
-            
+            renderCart();                        
         }
 
         function fetchOutgoingDataBySlip(slip){
+
+            // DOM Show delete button
+            // $('#deleteSlipBtn').show();
+
             const historySlip = outgoing_slips.find((item) => item['history_id_with_date'] == slip);
-            if (historySlip == undefined) {
-                console.log("slip not found: " + slip);
+            if (historySlip == undefined) {                
                 toastr.error('Slip: ' + slip + ' tidak ditemukan');
                 return;
             }
             // console.log(historySlip);
+            $('#value_outgoing_id').val(historySlip['outgoing_id'])
             $('#value_slip').text(slip);
             $('#value_account').text(historySlip['account_id']);
             $('#value_category').text(historySlip['category']);
@@ -891,12 +970,36 @@
             let driver_data = driver.find((item) => item.driver_code == driver_id);
             $('#value_driver').text(driver_data.driver_name);
 
-
-
-
-            const historyItems = outgoing_history.filter((item) => item['outgoing_id'] == historySlip['outgoing_id']);
+            const historyItems = outgoing_history.filter((item) => item['outgoing_id'] == historySlip['outgoing_id']);            
 
             updateDOMForHistoryItems(historyItems);
+        }
+
+
+        function deleteThisSlip() {
+            let slip = $('#value_outgoing_id').val();
+
+            // delete confirmation
+            if (!confirm('Apakah anda yakin ingin menghapus slip ini?')) {
+                return;
+            }
+
+            if (slip == '') {
+                toastr.error('Slip tidak ditemukan');
+                return;
+            }            
+
+            $.get("{{ route('transaction.deleteOutgoingData') }}", { slip: slip }, function(result) {
+                if (result.status == 200) {
+                    toastr.success('Data berhasil dihapus');
+                    fetchUncompletedOutgoingData();
+                    newSlip();
+                } else {
+                    toastr.error('Gagal menghapus data');
+                }
+            }).fail(function(err) {
+                toastr.error('Gagal menghapus data');
+            });
         }
 
         // Event Handler

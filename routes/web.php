@@ -32,7 +32,8 @@ Route::prefix('transaction')->name('transaction.')->middleware('auth')->group(fu
     Route::get('/fetch/outgoing/data', [TransactionController::class, 'fetchOutgoingData'])->name('fetchOutgoingData');    
     Route::get('/fetch/outgoing/uncompleted', [TransactionController::class, 'fetchUncompleted'])->name('fetchUncompleted');    
     Route::post('/submit/outgoing/data', [TransactionController::class, 'submitOutgoingData'])->name('submitOutgoingData');
-    Route::post('/submit/outgoing/complete', [TransactionController::class, 'submitOutgoingComplete'])->name('submitOutgoingComplete');
+    Route::post('/submit/outgoing/complete', [TransactionController::class, 'commitOutgoingData'])->name('commitOutgoingData');    
+    Route::post('/delete/outgoing/data', [TransactionController::class, 'deleteOutgoingData'])->name('deleteOutgoingData');
 
     // Transaction Logs
     Route::get('/logs', [TransactionController::class, 'transactionLogsIndex'])->name('transactionLogsIndex');    
