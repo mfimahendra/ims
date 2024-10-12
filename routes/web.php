@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\MaterialInventoryController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\FinancialController;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -47,7 +48,8 @@ Route::prefix('transaction')->name('transaction.')->middleware('auth')->group(fu
 // 4. DELETE   -> delete financial account, delete financial transcations
 
 Route::prefix('financial')->name('financial.')->middleware('auth')->group(function () {
-    Route::get('/', function () {
-        return "Financial";
-    });
+    Route::get('/', [FinancialController::class, 'index'])->name('index');
+
+    // Jurnal Transaksi
+    Route::get('/jurnal_transaksi', [FinancialController::class, 'jurnalIndex'])->name('jurnalIndex');
 });

@@ -20,7 +20,7 @@
                     </a>                    
                 </li>
 
-                @if (Auth::user()->role == 'owner')
+                @if (Auth::user()->role_code == 'owner')
                     <li class="nav-item">
                         <a href="#" class="nav-link">
                             <i class="fa-solid fa-coins"></i>
