@@ -22,7 +22,7 @@
 
                 @if (Auth::user()->role_code == 'owner')
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="{{ route('financial.index') }}" class="nav-link">
                             <i class="fa-solid fa-coins"></i>
                             <p>Keuangan</p>
                         </a>
