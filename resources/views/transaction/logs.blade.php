@@ -166,7 +166,7 @@
             }            
             
             $.ajax({
-                url: `{{ route('transaction.fetchTransactionLogs') }}?category=${category}&date=${date}${materialQuery}`,
+                url: `{{ route('warehouse.fetchTransactionLogs') }}?category=${category}&date=${date}${materialQuery}`,
                 type: 'GET',
                 success: function(response) {
                     

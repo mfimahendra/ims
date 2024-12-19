@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VehicleController extends Controller
 {
@@ -12,16 +13,14 @@ class VehicleController extends Controller
      */
     public function index()
     {
-        //
-    }
+        $vehicles = DB::table('vehicles')
+        ->leftJoin('drivers', 'vehicles.driver_id', '=', 'drivers.driver_code')                
+        ->get();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        return view('vehicle.index', 
+            ['vehicles' => $vehicles]
+        );
+    }    
 
     /**
      * Store a newly created resource in storage.

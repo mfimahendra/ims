@@ -9,47 +9,69 @@
     <div class="container">
         <div class="row">
             <div class="col-12">
-                <div class="card">
-                    {{-- <div class="card-header"></div> --}}
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col">
-                                <p>MENU</p>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-8">
-                                <div class="card-body">
-                                    <div class="chart">
-                                        <canvas id="barChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
-                                    </div>
-                                </div>
-                            </div>
+                @if (Auth::user()->role_code == 'owner')
+                    <div class="card">                    
+                        <div class="card-body">                        
                             <div class="col-4">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <a href="{{ route('transaction.incomingIndex') }}" class="btn btn-block bg-cyan" target="_blank">
-                                            <i class="fa-solid fa-boxes-packing"></i>
-                                            Barang Masuk
-                                        </a>
-                                    </div>
-                                    <div class="col-6">
-                                        <a href="{{ route('transaction.outgoingIndex') }}" class="btn btn-block btn-warning" target="_blank">
-                                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                                            Barang Keluar
-                                        </a>
-                                    </div>                                    
-                                    <div class="col-12" style="margin: 10px 0;">
-                                        <a href="{{ route('transaction.transactionLogsIndex') }}" class="btn btn-block bg-gray" target="_blank">
-                                            <i class="fa-solid fa-clock-rotate-left"></i>
-                                            Riwayat
-                                        </a>
+                                <div class="card">
+                                    <div class="card-body p-2">
+                                        <button class="btn btn-default btn-block btn-sm" style="font-size: 12px;">
+                                            <i class="fa-solid fa-coins"></i>
+                                            Details Hutang & Piutang
+                                        </button>
+                                        <table id="table_hutang" class="table table-hovered table-bordered">
+                                            <thead style="font-size: 12px;">
+                                                <tr>
+                                                    <th class="p-1">No</th>
+                                                    <th class="p-1">Toko</th>
+                                                    <th class="p-1">Harga</th>
+                                                    <th class="p-1">#</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                @else
+                    <div class="card">                    
+                        <div class="card-body">                        
+                            <div class="row">
+                                <div class="col-8">
+                                    <div class="card-body">
+                                        <div class="chart">
+                                            <canvas id="barChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <a href="{{ route('warehouse.incomingIndex') }}" class="btn btn-block bg-cyan" target="_blank">
+                                                <i class="fa-solid fa-boxes-packing"></i>
+                                                Barang Masuk
+                                            </a>
+                                        </div>
+                                        <div class="col-6">
+                                            <a href="{{ route('warehouse.outgoingIndex') }}" class="btn btn-block btn-warning" target="_blank">
+                                                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                                                Barang Keluar
+                                            </a>
+                                        </div>                                    
+                                        <div class="col-12" style="margin: 10px 0;">
+                                            <a href="{{ route('warehouse.transactionLogsIndex') }}" class="btn btn-block bg-gray" target="_blank">
+                                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                                Riwayat
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

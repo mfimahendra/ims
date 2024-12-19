@@ -3,7 +3,7 @@
     <a href="{{ route('home') }}" class="brand-link">
         {{-- <img src="" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8"> --}}                
         <i class="fa-solid fa-warehouse elevation-3 ml-3" style="opacity: .8"></i>
-        <span class="brand-text font-weight-light" style="font-size: 1rem;">Inventory Management</span>
+        <span class="brand-text font-weight-light" style="font-size: 1rem;">PT Agung Satriya Abadi</span>
     </a>
 
     <!-- Sidebar -->
@@ -17,7 +17,7 @@
                     <a href="{{ route('home') }}/" class="nav-link">
                         <i class="fa-solid fa-gauge"></i>
                         <p>Dashboard</p>
-                    </a>                    
+                    </a>
                 </li>
 
                 @if (Auth::user()->role_code == 'owner')
@@ -27,7 +27,8 @@
                             <p>Keuangan</p>
                         </a>
                     </li>                    
-                @endif                
+                @endif
+
                 <li class="nav-item">
                     <a href="{{ route('warehouse.index') }}" class="nav-link">
                         <i class="fa-solid fa-warehouse"></i>
@@ -35,7 +36,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <a href="{{ route('vehicle.index') }}" class="nav-link">
                         <i class="fa-solid fa-truck-moving"></i>
                         <p>Kendaraan</p>
                     </a>
@@ -47,21 +48,31 @@
                     </a>
                 </li>
                 <hr style="border: 0.5px solid #fff; width:100%; opacity:0.2;">
-                <li class="nav-header">TRANSAKSI</li>
+                @if (Auth::user()->role_code == 'owner')
+                    <li class="nav-header">TRANSAKSI KEUANGAN</li>
+                    <li class="nav-item">
+                        <a href="{{ route('financial.jurnalIndex') }}" class="nav-link">
+                            <i class="fa-solid fa-coins"></i>
+                            <p>Jurnal Transaksi</p>
+                        </a>
+                    </li>
+                @endif
+
+                <li class="nav-header">TRANSAKSI GUDANG</li>
                 <li class="nav-item">
-                    <a href="{{ route('transaction.incomingIndex') }}" class="nav-link">
+                    <a href="{{ route('warehouse.incomingIndex') }}" class="nav-link">
                         <i class="fa-solid fa-boxes-packing"></i>
                         <p>Barang Masuk <small>(IN)</small></p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('transaction.outgoingIndex') }}" class="nav-link">
+                    <a href="{{ route('warehouse.outgoingIndex') }}" class="nav-link">
                         <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         <p>Barang Keluar <small>(OUT)</small></p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('transaction.transactionLogsIndex') }}" class="nav-link">
+                    <a href="{{ route('warehouse.transactionLogsIndex') }}" class="nav-link">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                         <p>Riwayat <small>(LOGS)</small></p>
                     </a>

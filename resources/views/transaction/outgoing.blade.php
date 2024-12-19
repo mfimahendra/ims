@@ -209,11 +209,32 @@
                 {{-- Input form --}}
                 <div class="form-group">
                     <div class="row">
-                        <div class="col-12">
+                        {{-- <div class="col-12">
                             <label>Pilih Akun<span class="text-danger">*</span></label>
                             <select class="form-control select-account" id="select_account" style="width: 100%;">
                                 @foreach ($financial_accounts as $account)
                                     <option value="{{ $account->account_id }}">{{ $account->account_id }}</option>
+                                @endforeach
+                            </select>
+                        </div> --}}
+
+                        <div class="col-6">
+                            <label>Kredit<span class="text-danger">*</span></label>
+                            <select class="form-control select-account" id="select_credit" style="width: 100%;">
+                                @foreach ($assets as $aset)
+                                    @if ($aset->account_id == 'Persediaan Gudang')
+                                        <option value="{{ $aset->account_id }}" selected>{{ $aset->account_id }}</option>
+                                    @else
+                                        <option value="{{ $aset->account_id }}">{{ $aset->account_id }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label>Debit<span class="text-danger">*</span></label>
+                            <select class="form-control select-account" id="select_debit" style="width: 100%;">
+                                @foreach ($source as $sumber)
+                                    <option value="{{ $sumber->account_id }}">{{ $sumber->account_id }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -318,13 +339,13 @@
                         {{-- <div class="col-6">
                             <button style="width:100%;" class="btn btn-lg btn-danger" id="btn_cancel" onclick="cancelCart()"><i class="fa fa-times"></i> Batal</button>
                         </div> --}}
-                        <div class="col-4">
+                        <div class="col-5">
                             <button style="width:100%;" class="btn btn-lg bg-danger" id="btn_done" onclick="cancelCart()">
                                 <i class="fa fa-times"></i>
                                 Batalkan
                             </button>
                         </div>
-                        <div class="col-8">
+                        <div class="col-7">
                             <button style="width:100%;" class="btn btn-lg btn-primary" id="btn_submit" onclick="submitCart()">
                                 <i class="fa fa-save"></i>
                                 Simpan
@@ -406,7 +427,7 @@
         // }
 
         function fetchOutgoingData() {
-            $.get("{{ route('transaction.fetchOutgoingData') }}", function(result) {
+            $.get("{{ route('warehouse.fetchOutgoingData') }}", function(result) {
                 if (result.status == 200) {
                     inventories = result.inventories;
                     vehicle = result.vehicle;
@@ -707,12 +728,9 @@
                 toastr.error('Data tidak boleh kosong');
                 return;
             }
-
-            // validator for account, category, vehicle, driver
-            if ($('#value_account').text() == '') {
-                toastr.error('Akun tidak boleh kosong');
-                return;
-            }
+            
+            // Akun Kredit Debit
+            // TODO
 
             if ($('#value_category').text() == '') {
                 toastr.error('Kategori tidak boleh kosong');
@@ -747,7 +765,7 @@
             formData.append('_token', '{{ csrf_token() }}');
 
             $.ajax({
-                url: "{{ route('transaction.submitOutgoingData') }}",
+                url: "{{ route('warehouse.submitOutgoingData') }}",
                 type: 'POST',
                 data: formData,
                 contentType: false,
@@ -813,7 +831,7 @@
             formData.append('_token', '{{ csrf_token() }}');
 
             $.ajax({
-                url: "{{ route('transaction.commitOutgoingData') }}",
+                url: "{{ route('warehouse.commitOutgoingData') }}",
                 type: 'POST',
                 data: formData,
                 contentType: false,
@@ -836,7 +854,7 @@
         }
 
         function fetchUncompletedOutgoingData() {            
-            $.get("{{ route('transaction.fetchUncompleted') }}", function(result) {                
+            $.get("{{ route('warehouse.fetchUncompleted') }}", function(result) {                
                 if (result.status == 200) {                    
                     outgoing_history = result.histories;
                     outgoing_slips = result.slipItems;
@@ -989,7 +1007,7 @@
                 return;
             }            
 
-            $.get("{{ route('transaction.deleteOutgoingData') }}", { slip: slip }, function(result) {
+            $.get("{{ route('warehouse.deleteOutgoingData') }}", { slip: slip }, function(result) {
                 if (result.status == 200) {
                     toastr.success('Data berhasil dihapus');
                     fetchUncompletedOutgoingData();
@@ -1004,11 +1022,16 @@
 
         // Event Handler
         $(function() {
-            $('#select_account').select2({
+            $('#select_debit').select2({
                 theme: 'bootstrap4',
                 placeholder: 'Pilih Akun',
-                allowClear: true,
-                tags: true,
+                allowClear: true,                
+            });
+
+            $('#select_credit').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Pilih Akun',
+                allowClear: true,                
             });
 
             $('.select-vendor').select2({

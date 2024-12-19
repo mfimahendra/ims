@@ -46,10 +46,17 @@
             <div class="col-8">
                 <div class="card">
                     <div class="card-header row nota-header" style="padding: 5px 10px;">
-                        <div class="col">Akun : <span class="nota_header_value" id="nota_account"></span></div>
-                        <div class="col">Toko : <span class="nota_header_value" id="nota_vendor"></span></div>
+                        <div class="col" style="font-size: 14px">
+                            Debit : <span class="nota_header_value_debit" id="nota_debit"></span> <br>
+                            Kredit : <span class="nota_header_value_credit" id="nota_credit"></span>
+                        </div>                        
+                        <div class="col" style="font-size: 14px">Toko : <span class="nota_header_value" id="nota_vendor"></span></div>
                         {{-- <div class="col">Invoice : <span class="nota_header_value" id="nota_invoice"></span></div> --}}
-                        <div class="col" align="right">Tanggal : <span class="nota_header_value" id="nota_date"></span></div>
+                        <div class="col" align="right" style="font-size: 14px">
+                            Tanggal : <span class="nota_header_value" id="nota_date">
+                                {{ date('d/m/Y') }}
+                            </span>
+                        </div>
                     </div>
 
                     <div class="card-body p-0">
@@ -84,12 +91,28 @@
                     </button>
                 </div> --}}
                 <div class="form-group">
-                    <label>Pilih Akun<span class="text-danger">*</span></label>
-                    <select class="form-control select-account select2" id="select_account" style="width: 100%;" data-placeholder="Pilih Akun">
-                        @foreach ($financial_accounts as $account)                            
-                            <option value="{{ $account->account_id }}">{{ $account->account_id }}</option>
-                        @endforeach
-                    </select>
+                    <div class="row">
+                        <div class="col-6">
+                            <label>Debit<span class="text-danger">*</span></label>
+                            <select class="form-control select-account select2" id="select_debit" style="width: 100%;" data-placeholder="Pilih Akun">
+                                @foreach ($assets as $aset)                                                                        
+                                    @if ($aset->account_id == 'Persediaan Gudang')
+                                        <option value="{{ $aset->account_id }}" selected>{{ $aset->account_id }}</option>
+                                    @else
+                                        <option value="{{ $aset->account_id }}">{{ $aset->account_id }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label>Kredit<span class="text-danger">*</span></label>
+                            <select class="form-control select-account select2" id="select_credit" style="width: 100%;" data-placeholder="Pilih Akun">
+                                @foreach ($source as $sc)
+                                    <option value="{{ $sc->account_id }}">{{ $sc->account_id }}</option>                                    
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -170,37 +193,48 @@
 
         $(document).ready(function() {
             fetchInventories();
+            defaultState();
 
             $('body').addClass('sidebar-collapse');
-            checkLocalStorageCart();            
+            // checkLocalStorageCart();            
         });
 
-        function checkLocalStorageCart() {
-            var localCart = localStorage.getItem('incoming_cart');
-            var localVendor = localStorage.getItem('incoming_vendor');
-            var localDate = localStorage.getItem('incoming_date');
-            var localAccount = localStorage.getItem('incoming_account');
-            if (localCart) {
-                cart = JSON.parse(localCart);
-                renderCart();
-            }
-            if (localVendor) {
-                $('#select_vendor').val(localVendor).trigger('change');
-                $('#nota_vendor').text(localVendor);
-            }
-            if (localDate) {
-                $('#input_date').val(localDate);
-                $('#nota_date').text(localDate);
-            }
+        // function checkLocalStorageCart() {
+        //     var localCart = localStorage.getItem('incoming_cart');
+        //     var localVendor = localStorage.getItem('incoming_vendor');
+        //     var localDate = localStorage.getItem('incoming_date');
+        //     var localAccount = localStorage.getItem('incoming_account');
+        //     if (localCart) {
+        //         cart = JSON.parse(localCart);
+        //         renderCart();
+        //     }
+        //     if (localVendor) {
+        //         $('#select_vendor').val(localVendor).trigger('change');
+        //         $('#nota_vendor').text(localVendor);
+        //     }
+        //     if (localDate) {
+        //         $('#input_date').val(localDate);
+        //         $('#nota_date').text(localDate);
+        //     }
 
-            if (localAccount) {
-                $('#nota_account').text(localAccount);
-                $('#select_account').val(localAccount).trigger('change');
-            }
+        //     if (localAccount) {
+        //         $('#nota_account').text(localAccount);
+        //         $('#select_account').val(localAccount).trigger('change');
+        //     }
+        // }
+
+        function defaultState() {
+            // get selected select_debit and select_credit
+            var debit = $('#select_debit').val();
+            var credit = $('#select_credit').val();
+
+            // set to nota_debit and nota_credit
+            $('#nota_debit').text(debit);
+            $('#nota_credit').text(credit);
         }
 
         function fetchInventories() {
-            $.get("{{ route('transaction.fetchIncomingData') }}", function(result) {
+            $.get("{{ route('warehouse.fetchIncomingData') }}", function(result) {
                 if (result.status == 200) {
                     inventories = result.inventories;
                     vendor = result.vendor;
@@ -432,7 +466,7 @@
             formData.append('_token', '{{ csrf_token() }}');
             
             $.ajax({
-                url: "{{ route('transaction.submitIncomingData') }}",
+                url: "{{ route('warehouse.submitIncomingData') }}",
                 type: 'POST',
                 data: formData,
                 contentType: false,
@@ -455,11 +489,16 @@
 
         $(function() {
 
-            $('#select_account').select2({
+            $('#select_debit').select2({
                 theme: 'bootstrap4',
                 placeholder: 'Pilih Akun',
-                allowClear: true,
-                tags: true,
+                allowClear: true,                
+            });            
+
+            $('#select_credit').select2({
+                theme: 'bootstrap4',
+                placeholder: 'Pilih Akun',
+                allowClear: true,                
             });
 
             $('.datepicker').datepicker({
@@ -481,9 +520,14 @@
             })
 
             // event
-            $('#select_account').on('select2:select', function(e) {
+            $('#select_debit').on('select2:select', function(e) {
                 var data = e.params.data;
-                $('#nota_account').text(data.text);
+                $('#nota_debit').text(data.text);
+            });
+
+            $('#select_credit').on('select2:select', function(e) {
+                var data = e.params.data;
+                $('#nota_credit').text(data.text);
             });
 
             $('#select_vendor').on('select2:select', function(e) {

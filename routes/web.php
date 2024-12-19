@@ -3,8 +3,9 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\MaterialInventoryController;
-use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\WarehouseController;
 use App\Http\Controllers\FinancialController;
+use App\Http\Controllers\VehicleController;
 
 Route::get('/', function () {
     return redirect('/login');
@@ -20,25 +21,23 @@ Route::prefix('warehouse')->name('warehouse.')->middleware('auth')->group(functi
     Route::get('/', [MaterialInventoryController::class, 'index'])->name('index');    
     Route::get('/fetch/material/inventory', [MaterialInventoryController::class, 'fetchInventory'])->name('fetchInventory');
     Route::put('/update/material', [MaterialInventoryController::class, 'updateInventory'])->name('updateInventory');    
-});
 
-Route::prefix('transaction')->name('transaction.')->middleware('auth')->group(function () {
     // Incoming
-    Route::get('/incoming', [TransactionController::class, 'incomingIndex'])->name('incomingIndex');    
-    Route::get('/fetch/incoming/data', [TransactionController::class, 'fetchIncomingData'])->name('fetchIncomingData');
-    Route::post('/submit/incoming/data', [TransactionController::class, 'submitIncomingData'])->name('submitIncomingData');
+    Route::get('/incoming', [WarehouseController::class, 'incomingIndex'])->name('incomingIndex');    
+    Route::get('/fetch/incoming/data', [WarehouseController::class, 'fetchIncomingData'])->name('fetchIncomingData');
+    Route::post('/submit/incoming/data', [WarehouseController::class, 'submitIncomingData'])->name('submitIncomingData');
 
     // Outgoing
-    Route::get('/outgoing', [TransactionController::class, 'outgoingIndex'])->name('outgoingIndex');
-    Route::get('/fetch/outgoing/data', [TransactionController::class, 'fetchOutgoingData'])->name('fetchOutgoingData');    
-    Route::get('/fetch/outgoing/uncompleted', [TransactionController::class, 'fetchUncompleted'])->name('fetchUncompleted');    
-    Route::post('/submit/outgoing/data', [TransactionController::class, 'submitOutgoingData'])->name('submitOutgoingData');
-    Route::post('/submit/outgoing/complete', [TransactionController::class, 'commitOutgoingData'])->name('commitOutgoingData');    
-    Route::post('/delete/outgoing/data', [TransactionController::class, 'deleteOutgoingData'])->name('deleteOutgoingData');
+    Route::get('/outgoing', [WarehouseController::class, 'outgoingIndex'])->name('outgoingIndex');
+    Route::get('/fetch/outgoing/data', [WarehouseController::class, 'fetchOutgoingData'])->name('fetchOutgoingData');    
+    Route::get('/fetch/outgoing/uncompleted', [WarehouseController::class, 'fetchUncompleted'])->name('fetchUncompleted');    
+    Route::post('/submit/outgoing/data', [WarehouseController::class, 'submitOutgoingData'])->name('submitOutgoingData');
+    Route::post('/submit/outgoing/complete', [WarehouseController::class, 'commitOutgoingData'])->name('commitOutgoingData');    
+    Route::post('/delete/outgoing/data', [WarehouseController::class, 'deleteOutgoingData'])->name('deleteOutgoingData');
 
     // Transaction Logs
-    Route::get('/logs', [TransactionController::class, 'transactionLogsIndex'])->name('transactionLogsIndex');    
-    Route::get('/fetch/transaction/logs', [TransactionController::class, 'fetchTransactionLogs'])->name('fetchTransactionLogs');
+    Route::get('/logs', [WarehouseController::class, 'transactionLogsIndex'])->name('transactionLogsIndex');    
+    Route::get('/fetch/transaction/logs', [WarehouseController::class, 'fetchTransactionLogs'])->name('fetchTransactionLogs');
 });
 
 // FINANCIAL ADMIN ROUTES
@@ -51,5 +50,19 @@ Route::prefix('financial')->name('financial.')->middleware('auth')->group(functi
     Route::get('/', [FinancialController::class, 'index'])->name('index');
 
     // Jurnal Transaksi
+    Route::get('/account', [FinancialController::class, 'accountIndex'])->name('accountIndex');
     Route::get('/jurnal_transaksi', [FinancialController::class, 'jurnalIndex'])->name('jurnalIndex');
+
+
+    // FETCH    
+    Route::get('/fetch/account/data', [FinancialController::class, 'fetchAccountData'])->name('fetchAccountData');
+    Route::get('fetch/journal/data', [FinancialController::class, 'fetchJournalData'])->name('fetchJournalData');
+
+    // Transaction    
+    Route::post('/account/update', [FinancialController::class, 'updateAccount'])->name('updateAccount');
+});
+
+
+Route::prefix('vehicle')->name('vehicle.')->middleware('auth')->group(function () {
+    Route::get('/', [VehicleController::class, 'index'])->name('index');        
 });

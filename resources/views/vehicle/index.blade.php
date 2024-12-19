@@ -15,44 +15,40 @@
 @endsection
 
 @section('nav-title')
-    Menu Financial
+    Kendaraan
 @endsection
 
 @section('content')
     <div class="container">
         <div class="row">
-            <div class="col-10">
-                <h1>Chart</h1>
-            </div>            
-            <div class="col-2">
-                <a href="{{ route('financial.accountIndex') }}" class="btn bg-purple btn-md btn-block">
-                    <i class="fa-solid fa-coins"></i>
-                    Akun Keuangan
-                </a>
-                <a href="{{ route('financial.jurnalIndex') }}" class="btn bg-green btn-md btn-block">
-                    <i class="fa-solid fa-coins"></i>
-                    Jurnal Transaksi
-                </a>                
-                <hr>
-                <button class="btn bg-primary btn-md btn-block">
-                    <i class="fa-solid fa-book"></i>
-                    Buku Besar
-                </button>
-                <button class="btn bg-info btn-md btn-block">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                    Laporan Keuangan
-                </button>
-                <hr>
-                <button class="btn bg-orange btn-md btn-block">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                    Laporan Laba Rugi
-                </button>
-                <button class="btn bg-orange btn-md btn-block">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                    Laporan Neraca
-                </button>                
+            <div class="col-5">
+                <div class="card">
+                    <div class="card-body p-1">
+                        <table id="tableVehicleLists" class="table table-hovered table-bordered" style="font-size: 14px;">
+                            <thead>
+                                <tr>
+                                    <th class="p-2">No</th>
+                                    <th class="p-2">Nama</th>
+                                    <th class="p-2">Plat Nomor</th>
+                                    <th class="p-2">Driver</th>
+                                    <th class="p-2">#</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
-        </div>            
+            <div class="col-3">
+
+            </div>
+            <div class="col-4">
+
+            </div>
+            
+        </div>                
     </div>
 @endsection
 
@@ -74,9 +70,37 @@
     <script src="{{ asset('adminlte/plugins/inputmask/jquery.inputmask.min.js') }}"></script>
     <script src="{{ asset('adminlte/plugins/daterangepicker/daterangepicker.js') }}"></script>
     <script>
-        $(document).ready(function() {
 
-        });        
+        var vehicles = {!! json_encode($vehicles) !!};
+
+        $(document).ready(function() {
+            $('body').addClass('sidebar-collapse');            
+
+            renderTableVehicleLists();
+        });
+
+        function renderTableVehicleLists() {
+            
+            let html = '';            
+
+            vehicles.forEach((vehicle, index) => {
+                html += `
+                    <tr>
+                        <td class="p-2">${index + 1}</td>
+                        <td class="p-2">${vehicle.vehicle_description}</td>
+                        <td class="p-2">${vehicle.vehicle_id}</td>
+                        <td class="p-2">${vehicle.driver_name ? vehicle.driver_name : '-'}</td>
+                        <td class="p-2">
+                            <button class="btn btn-sm btn-primary" onclick="editVehicle(${vehicle.id})">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteVehicle(${vehicle.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            $('#tableVehicleLists tbody').html(html);
+
+        }
 
         $(function() {
 
